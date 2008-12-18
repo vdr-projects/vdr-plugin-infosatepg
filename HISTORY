@@ -1,0 +1,31 @@
+VDR Plugin 'infosatepg' Revision History
+----------------------------------------
+
+2008-12-17: Version 0.0.5
+
+- Changed channel setup
+- Changed algorithm to find a free device
+- Added SVDRP status
+
+2008-11-11: Version 0.0.4
+
+- Added fix from LiamHD 
+
+2008-06-18: Version 0.0.3
+
+- Changed function to find event
+- Added setup value usePrimary
+- Lock filter after complete reception
+- Delete old data files
+
+2008-06-15: Version 0.0.2
+
+- Changed function to find event
+- Setup value WaitTime wasn't used
+- Added setup value EventTimeDiff
+- Fixed some bugs in process.cpp
+- Minor changes to Makefile
+
+2008-05-01: Version 0.0.1
+
+- Initial revision.
