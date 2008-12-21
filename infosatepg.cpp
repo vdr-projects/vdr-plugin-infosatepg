@@ -174,7 +174,7 @@ void cPluginInfosatepg::MainThreadHook(void)
 cString cPluginInfosatepg::Active(void)
 {
     // Returns a message string if shutdown should be postponed
-    if (!global->Locked())
+    if (!global->isLocked())
         return tr("Infosat plugin still working");
     return NULL;
 }

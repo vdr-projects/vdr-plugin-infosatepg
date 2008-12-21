@@ -75,17 +75,17 @@ void cMenuSetupInfosatepg::Store(void)
 eOSState cMenuSetupInfosatepg::Edit()
 {
     if (HasSubMenu() || Count()==0)
-        return osContinue;
+        return osBack;
     if (Current()>=chanCurrent)
     {
         int chanIndex=Current()-chanCurrent;
         if (chanIndex<global->InfosatChannels())
             return AddSubMenu(new cMenuSetupChannelMenu(global,chanIndex));
         else
-            return osContinue;
+            return osBack;
     }
     else
-        return osContinue;
+        return osBack;
 }
 
 eOSState cMenuSetupInfosatepg::ProcessKey(eKeys Key)
@@ -100,7 +100,9 @@ eOSState cMenuSetupInfosatepg::ProcessKey(eKeys Key)
             switch (Key)
             {
             case kOk:
-                return Edit();
+                state=Edit();
+                if (state==osBack) Store();
+                break;
             default:
                 break;
             }
