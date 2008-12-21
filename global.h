@@ -131,6 +131,7 @@ public:
     int Pid;
     int EventTimeDiff;
     int WaitTime;
+    int WakeupTime; // 0100 = 01:00  1222 = 12:22
 
     const char *Directory()
     {

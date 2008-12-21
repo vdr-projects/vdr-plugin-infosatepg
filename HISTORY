@@ -1,11 +1,15 @@
 VDR Plugin 'infosatepg' Revision History
 ----------------------------------------
+2008-12-21: Version 0.0.6
+
+- Added WakeupTime
+- Added shutdown message
 
 2008-12-17: Version 0.0.5
 
 - Changed channel setup
 - Changed algorithm to find a free device
-- Added SVDRP status
+- Added SVDRP state
 
 2008-11-11: Version 0.0.4
 

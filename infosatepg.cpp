@@ -173,14 +173,21 @@ void cPluginInfosatepg::MainThreadHook(void)
 
 cString cPluginInfosatepg::Active(void)
 {
-    // Return a message string if shutdown should be postponed
+    // Returns a message string if shutdown should be postponed
+    if (!global->Locked())
+        return tr("Infosat plugin still working");
     return NULL;
 }
 
 time_t cPluginInfosatepg::WakeupTime(void)
 {
-    // Return custom wakeup time for shutdown script
-    return 0;
+    // Returns custom wakeup time for shutdown script
+    if (!global->WakeupTime) return 0;
+    time_t Now = time(NULL);
+    time_t Time = cTimer::SetTime(Now,cTimer::TimeToInt(global->WakeupTime));
+    if (Time <= Now)
+       Time = cTimer::IncDay(Time,1);
+    return Time;
 }
 
 cOsdObject *cPluginInfosatepg::MainMenuAction(void)
@@ -202,6 +209,7 @@ bool cPluginInfosatepg::SetupParse(const char *Name, const char *Value)
     else if (!strcasecmp(Name,"Pid")) global->Pid=atoi(Value);
     else if (!strcasecmp(Name,"WaitTime")) global->WaitTime=atoi(Value);
     else if (!strcasecmp(Name,"EventTimeDiff")) global->EventTimeDiff=60*atoi(Value);
+    else if (!strcasecmp(Name,"WakeupTime")) global->WakeupTime=atoi(Value);
     else if (!strncasecmp(Name,"Channel",7))
     {
         if (strlen(Name)<10) return false;

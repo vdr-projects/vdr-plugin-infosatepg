@@ -19,6 +19,7 @@ private:
   cGlobalInfosatepg *global;
   int newChannel;
   int newWaitTime;
+  int newWakeupTime;
   int newEventTimeDiff;
   int newPid;
   int chanCurrent;

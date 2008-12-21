@@ -16,17 +16,20 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg(cGlobalInfosatepg *Global)
     newChannel = global->Channel;
     newPid = global->Pid;
     newWaitTime = global->WaitTime;
+    newWakeupTime = global->WakeupTime;
     newEventTimeDiff=(int) (global->EventTimeDiff/60);
 
     Add(NewTitle(tr("Scan parameter")));
     cOsdItem *firstItem = new cMenuEditIntItem( tr("Channel"), &newChannel,1,Channels.MaxNumber());
     Add(firstItem);
     Add(new cMenuEditIntItem( tr("Pid"), &newPid,1,8191));
-
-    Add(NewTitle(tr("Options")));
-    Add(new cMenuEditIntItem( tr("WaitTime [s]"), &newWaitTime,MIN_WAITTIME,MAX_WAITTIME));
-    Add(new cMenuEditIntItem( tr("Event TimeDiff [min]"), &newEventTimeDiff,
+    Add(NewTitle(tr("Event options")));
+    Add(new cMenuEditIntItem( tr("Wait time [s]"), &newWaitTime,MIN_WAITTIME,MAX_WAITTIME));
+    Add(new cMenuEditIntItem( tr("Time difference [min]"), &newEventTimeDiff,
                               MIN_EVENTTIMEDIFF,MAX_EVENTTIMEDIFF));
+
+    Add(NewTitle(tr("Wakeup options")));
+    Add(new cMenuEditTimeItem(tr("Wakeup time"),&newWakeupTime));
 
     if (global->InfosatChannels())
     {
@@ -63,6 +66,7 @@ void cMenuSetupInfosatepg::Store(void)
     SetupStore("Pid", global->Pid = newPid);
     SetupStore("WaitTime", global->WaitTime = newWaitTime);
     SetupStore("EventTimeDiff", newEventTimeDiff);
+    SetupStore("WakeupTime",global->WakeupTime = newWakeupTime);
     global->EventTimeDiff = 60*newEventTimeDiff;
 
     if (bReprocess) global->ResetProcessedFlags();

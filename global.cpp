@@ -128,6 +128,7 @@ cGlobalInfosatepg::cGlobalInfosatepg()
     SetDirectory("/tmp");
     infosatchannels=NULL;
     numinfosatchannels=0;
+    WakeupTime=0;
     this_day=-1;
     this_month=-1;
 }
