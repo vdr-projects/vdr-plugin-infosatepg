@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vdr-1.6.0\n"
 "Report-Msgid-Bugs-To: <see README>\n"
-"POT-Creation-Date: 2008-12-21 19:39+0100\n"
+"POT-Creation-Date: 2009-01-02 01:28+0100\n"
 "PO-Revision-Date: 2008-05-02 16:20+0200\n"
 "Last-Translator: Jochen Dolze <infosatepg@dolze.de>\n"
 "Language-Team: <vdr@linuxtv.org>\n"
@@ -38,12 +38,6 @@ msgstr "Wartezeit [s]"
 
 msgid "Time difference [min]"
 msgstr "Zeitdifferenz [min]"
-
-msgid "Wakeup options"
-msgstr "Weck-Optionen"
-
-msgid "Wakeup time"
-msgstr "Weckzeit"
 
 msgid "Infosat channels"
 msgstr "Infosat Kanäle"

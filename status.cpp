@@ -26,7 +26,11 @@ void cStatusInfosatepg::ChannelSwitch(const cDevice *Device, int ChannelNumber)
     bool bAddFilter=false;
 
     // just add filter if we aren't locked
-    if ((ChannelNumber==global->Channel) && (!global->isLocked())) bAddFilter=true;
+    if (ChannelNumber==global->Channel)
+    {
+        if (Device!=global->dev) return; // don't use virtual devices (they will switch too)
+        if (!global->ReceivedAll()) bAddFilter=true;
+    }
 
     if (bAddFilter)
     {
@@ -55,7 +59,8 @@ void cStatusInfosatepg::ChannelSwitch(const cDevice *Device, int ChannelNumber)
                 dsyslog("infosatepg: detach filter");
                 myFilterDevice->Detach(myFilter);
                 myFilterDevice=NULL;
-                global->SetTimer();
+                global->dev=NULL;
+                global->SetWaitTimer();
                 global->SetSwitched(false);
             }
         }

@@ -140,9 +140,11 @@ cProcessInfosatepg::cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global)
     f=fopen(file,"r");
     if (f)
     {
-        if (ParseInfosatepg(f))
+        int firststarttime=-1;
+        if (ParseInfosatepg(f,&firststarttime))
         {
-            Global->Infosatdata[Mac].SetProcessed();
+            global->SetWakeupTime(firststarttime);
+            global->Infosatdata[Mac].Processed=true;
         }
         else
         {
@@ -200,8 +202,8 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
         if (!Event) Event= (cEvent *) SearchEvent(Schedule,iEvent);
         if (!Event) return true; // just bail out with ok
 
-	start=iEvent->StartTime();
-	dsyslog("infosatepg: ievent %s [%s]", iEvent->Title(),ctime(&start));
+        start=iEvent->StartTime();
+        dsyslog("infosatepg: ievent %s [%s]", iEvent->Title(),ctime(&start));
 
         // change existing event
         Event->SetShortText(iEvent->ShortText());
@@ -321,7 +323,7 @@ bool cProcessInfosatepg::CheckAnnouncement(char *s,cInfosatevent *iEvent)
     return ret;
 }
 
-bool cProcessInfosatepg::ParseInfosatepg(FILE *f)
+bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
 {
     char *s,tag;
     int fields,index;
@@ -433,6 +435,14 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f)
                 if (!ievent) ievent = new cInfosatevent;
                 tm.tm_hour=shour;
                 tm.tm_min=sminute;
+
+                if (*firststarttime==-1)
+                {
+                    shour-=2;
+                    if (shour<0) shour=24+shour;
+                    *firststarttime=(shour*100)+sminute;
+                }
+
                 tm.tm_isdst=-1;
                 time_t start=mktime(&tm);
                 if ((oldstart!=(time_t) -1) && (difftime(start,oldstart)<0))

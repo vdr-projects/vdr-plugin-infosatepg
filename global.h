@@ -13,6 +13,8 @@
 #include <sys/types.h>
 
 #include <vdr/channels.h>
+#include <vdr/timers.h>
+#include <vdr/device.h>
 
 #define MIN_WAITTIME 10
 #define MAX_WAITTIME 120
@@ -21,14 +23,14 @@
 
 class cGlobalInfosatdata
 {
-#define _GetByte( ptr, bitnum ) ( (((char*)ptr)+bitnum/8) )
-#define _GetBit( ptr, bitnum ) ( (*_GetByte(ptr, bitnum) >> (bitnum%8)) & 1 )
-#define _SetBit( ptr, bitnum, val ) ( val ? \
+#define _GetByte(ptr, bitnum) ((((char*)ptr)+bitnum/8))
+#define _GetBit(ptr, bitnum) ((*_GetByte(ptr, bitnum) >> (bitnum%8)) & 1)
+#define _SetBit(ptr, bitnum, val) (val ? \
 	(*_GetByte(ptr, bitnum) |= (1<<(bitnum%8))) : \
-	(*_GetByte(ptr, bitnum) &= ~(1<<(bitnum%8))) )
+	(*_GetByte(ptr, bitnum) &= ~(1<<(bitnum%8))))
 private:
-    bool        ready;
-    bool        processed;
+    bool        receivedall;
+    int         receivedpercent;
     u_char      day;
     u_char      month;
     u_short     pktcnt;
@@ -36,13 +38,19 @@ private:
     char        file[1024];
 public:
     cGlobalInfosatdata();
-    bool isReady2Process()
+    bool Processed;
+    bool ReceivedAll()
     {
-        return (ready && !processed);
+        return receivedall;
     }
-    bool wasProcessed()
+    void ResetReceivedAll()
     {
-        return (ready && processed);
+        Init(file,0,0,0);
+    }
+    bool CheckReceivedAll();
+    int ReceivedPercent()
+    {
+        return receivedpercent;
     }
     int  Day()
     {
@@ -52,39 +60,24 @@ public:
     {
         return month;
     }
-    int  Packetcount()
+    bool GetBit (int Bitnumber)
     {
-        return pktcnt;
+        return _GetBit (bitfield,Bitnumber);
     }
-    void SetProcessed()
+    void SetBit (int Bitnumber,bool Value)
     {
-        processed=true;
+        _SetBit (bitfield,Bitnumber,Value);
     }
-    void ResetProcessed()
-    {
-        processed=false;
-    }
-    bool GetBit(int Bitnumber)
-    {
-        return _GetBit(bitfield,Bitnumber);
-    }
-    void SetBit(int Bitnumber,bool Value)
-    {
-        _SetBit(bitfield,Bitnumber,Value);
-    }
-    const char *GetFile() const
+    const char *GetFile() const // used in process.cpp
     {
         return (char *) &file;
     }
-
-    bool NeverSeen(int Day, int Month, int Packetcount);
-    void Init(char *File, int Day, int Month, int Packetcount);
-    bool ReceivedAll();
-    int ReceivedPercent();
-    int Load(int fd);
-    int Save(int fd);
+    bool NeverSeen (int Day, int Month, int Packetcount);
+    void Init (char *File, int Day, int Month, int Packetcount);
+    int Load (int fd);
+    int Save (int fd);
 #ifdef INFOSATEPG_DEBUG
-    void Debug(const char *Directory);
+    void Debug (const char *Directory);
 #endif
 };
 
@@ -121,62 +114,74 @@ private:
     const char *directory;
     u_char MAC[5];
     time_t timer;
-    bool Switched;
+    bool switched;
     int this_day;
     int this_month;
+    int numinfosatchannels;
+    int wakeuptime;
+    struct infosatchannels *infosatchannels;
+    void ResetReceivedAll(void);
 public:
     cGlobalInfosatepg();
     ~cGlobalInfosatepg();
+    cGlobalInfosatdata Infosatdata[EPG_DAYS+1];
+    cDevice *dev;
+    void SetWakeupTime(int Time)
+    {
+        if (Time==-1) return;
+        if (wakeuptime!=-1) return; // already set
+        int hour,minute;
+        hour=(int) (wakeuptime/100);
+        minute=wakeuptime-(hour*100);
+        isyslog("infosatepg: wakeup set to %02i:%02i", hour,minute);
+        wakeuptime=Time;
+    }
+    int WakeupTime()
+    {
+        return wakeuptime;
+    }
+    int LastCurrentChannel;
     int Channel;
     int Pid;
     int EventTimeDiff;
     int WaitTime;
-    int WakeupTime; // 0100 = 01:00  1222 = 12:22
-
     const char *Directory()
     {
         return directory;
     }
-    bool SetDirectory(const char *Directory);
-    bool CheckMAC(struct ethhdr *eth_hdr);
-    void SetTimer()
+    bool SetDirectory (const char *Directory);
+    bool CheckMAC (struct ethhdr *eth_hdr);
+    void SetWaitTimer()
     {
-        timer=time(NULL);
+        timer=time (NULL);
     }
-    bool isWaitOk()
+    bool WaitOk()
     {
-        return (time(NULL)>(timer+(time_t) WaitTime));
+        return (time (NULL) > (timer+ (time_t) WaitTime));
     }
-    void SetSwitched(bool Value)
+    void SetSwitched (bool Value)
     {
-        Switched=Value;
+        switched=Value;
     }
-    bool isSwitched()
+    bool Switched()
     {
-        return Switched;
+        return switched;
     }
-
-public:
-    cGlobalInfosatdata Infosatdata[EPG_DAYS+1];
     int Load();
     int Save();
-    void Lock(time_t Now);
-    bool isLocked(int *Day, int *Month);
-    bool isLocked()
+    bool ProcessedAll;
+    bool ReceivedAll (int *Day, int *Month);
+    bool ReceivedAll()
     {
-        return isLocked(NULL,NULL);
+        return ReceivedAll (NULL,NULL);
     }
-
-private:
-    int numinfosatchannels;
-    struct infosatchannels *infosatchannels;
-public:
-    void AddChannel(tChannelID ChannelID,int Usage);
-    tChannelID GetChannelID(int Index);
-    bool SetChannelUse(int Index,int Usage);
-    void ResetProcessedFlags(void);
-    int GetChannelUse(int Index);
-    bool ChannelExists(tChannelID ChannelID,int *Index);
+    void AddChannel (tChannelID ChannelID,int Usage);
+    void RemoveChannel(int Index);
+    tChannelID GetChannelID (int Index);
+    bool SetChannelUse (int Index,int Usage);
+    void ResetProcessed (void);
+    int GetChannelUse (int Index);
+    bool ChannelExists (tChannelID ChannelID,int *Index);
     int InfosatChannels()
     {
         return numinfosatchannels;

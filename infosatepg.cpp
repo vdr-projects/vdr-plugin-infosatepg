@@ -78,7 +78,18 @@ bool cPluginInfosatepg::ProcessArgs(int argc, char *argv[])
 
 bool cPluginInfosatepg::Initialize(void)
 {
-    // Initialize any background activities the plugin shall perform.
+    // Initialize plugin - check channellist
+    tChannelID ChannelID;
+    for (int i=0; i<global->InfosatChannels(); i++)
+    {
+        ChannelID=global->GetChannelID(i);
+        if (!Channels.GetByChannelID(ChannelID))
+        {
+            dsyslog("infosatepg: remove %s",*ChannelID.ToString());
+            global->RemoveChannel(i);
+            // Removing entries from setup.conf is not possible!
+        }
+    }
     return true;
 }
 
@@ -110,83 +121,119 @@ void cPluginInfosatepg::Stop(void)
 void cPluginInfosatepg::Housekeeping(void)
 {
     // Perform any cleanup or other regular tasks.
-    int numProcessed=0;
     for (int mac=EPG_FIRST_DAY_MAC; mac<=EPG_LAST_DAY_MAC; mac++)
     {
-        if (global->Infosatdata[mac].isReady2Process())
+        if (global->Infosatdata[mac].ReceivedAll() & !global->Infosatdata[mac].Processed)
         {
-            isyslog("infosatepg: janitor found data to be processed: day=%i month=%i",
-                    global->Infosatdata[mac].Day(),global->Infosatdata[mac].Month());
-            cProcessInfosatepg process(mac,global);
-        }
-        if (global->Infosatdata[mac].wasProcessed())
-        {
-            numProcessed++;
+            isyslog ("infosatepg: janitor found data to be processed: day=%i month=%i",
+                     global->Infosatdata[mac].Day(),global->Infosatdata[mac].Month());
+            cProcessInfosatepg process (mac,global);
         }
     }
-    if (numProcessed==EPG_DAYS)
+    int numprocessed=0;
+    for (int mac=EPG_FIRST_DAY_MAC; mac<=EPG_LAST_DAY_MAC; mac++)
     {
-        global->Lock(time(NULL));
+        if (global->Infosatdata[mac].Processed) numprocessed++;
     }
+    if (numprocessed==EPG_DAYS) global->ProcessedAll=true;
+
+
 }
 
 void cPluginInfosatepg::MainThreadHook(void)
 {
     // Perform actions in the context of the main program thread.
-    if ((!global->isWaitOk()) || (global->isSwitched()) || (global->isLocked())) return;
+    if ((!global->WaitOk()) || (global->Switched()) || (global->ReceivedAll())) return;
 
     cChannel *chan=Channels.GetByNumber(global->Channel);
     if (!chan) return;
+
+    if (ShutdownHandler.IsUserInactive())
+    {
+        // we are idle -> use live device if we can
+        cDevice *dev;
+        dev=cDevice::ActualDevice();
+        if (dev->ProvidesTransponder(chan) && !dev->Receiving())
+        {
+            // ok -> use this device
+            dsyslog("infosatepg: found free device %i (live)",dev->DeviceNumber()+1);
+            global->dev=dev;
+            if (global->LastCurrentChannel==-1) global->LastCurrentChannel=
+                    cDevice::PrimaryDevice()->CurrentChannel();
+            cDevice::PrimaryDevice()->SwitchChannel(chan,true);
+            global->SetWaitTimer();
+            return;
+        }
+    }
+
+    // Cannot use live device try another (if possible)
 
     for (int i=0; i<cDevice::NumDevices(); i++)
     {
         cDevice *dev=cDevice::GetDevice(i);
         if (dev)
         {
-            bool live=false;
-            if (dev->IsTunedToTransponder(chan)) return; // device is already tuned to transponder -> ok
             if (!dev->ProvidesTransponder(chan)) continue; // device cannot provide transponder -> skip
+            if (dev->IsTunedToTransponder(chan))
+            {
+                // just use this device
+                dsyslog("infosatepg: found already switched device %i",dev->DeviceNumber()+1);
+                global->dev=dev;
+                if (cDevice::ActualDevice()->CardIndex()==i)
+                    cDevice::PrimaryDevice()->SwitchChannel(chan,true);
+                else
+                    dev->SwitchChannel(chan,false);
+                global->SetWaitTimer();
+                return;
+            }
             if (EITScanner.UsesDevice(dev)) continue; // EITScanner is updating EPG -> skip
             if (dev->Receiving()) continue; // device is recording -> skip
-
-            if (dev->IsPrimaryDevice())
-            {
-                // just use primary ff-card if inactive
-                if (!ShutdownHandler.IsUserInactive()) continue; // not idle -> skip
-            }
-
-            if (cDevice::ActualDevice()->CardIndex()==i)
-            {
-                // LIVE device without recording, just use if inactive
-                if (!ShutdownHandler.IsUserInactive()) continue; // not idle -> skip
-                live=true;
-            }
+            if (dev->IsPrimaryDevice()) continue; // device is primary -> skip
+            if (cDevice::ActualDevice()->CardIndex()==i) continue; // device is live viewing -> skip
 
             // ok -> use this device
             dsyslog("infosatepg: found free device %i",dev->DeviceNumber()+1);
-            dev->SwitchChannel(chan,live);
-            global->SetTimer();
+            global->dev=dev;
+            dev->SwitchChannel(chan,false);
+            global->SetWaitTimer();
             return;
         }
     }
+
 }
 
 cString cPluginInfosatepg::Active(void)
 {
-    // Returns a message string if shutdown should be postponed
-    if (!global->isLocked())
+    // Returns a message string if we are not ready
+    if (!global->ProcessedAll)
         return tr("Infosat plugin still working");
+
+    // we are done
+    if (global->LastCurrentChannel!=-1)
+    {
+        // we switched from users last channel
+        if (cDevice::PrimaryDevice()->CurrentChannel()==global->Channel)
+        {
+            // we are still on infosatepg channel
+            cChannel *chan=Channels.GetByNumber(global->Channel);
+            if (chan)
+            {
+                // switch back to users last viewed channel
+                cDevice::PrimaryDevice()->SwitchChannel(chan,true);
+            }
+        }
+    }
     return NULL;
 }
 
 time_t cPluginInfosatepg::WakeupTime(void)
 {
     // Returns custom wakeup time for shutdown script
-    if (!global->WakeupTime) return 0;
+    if (global->WakeupTime()==-1) global->SetWakeupTime(300); // just to be safe
     time_t Now = time(NULL);
-    time_t Time = cTimer::SetTime(Now,cTimer::TimeToInt(global->WakeupTime));
+    time_t Time = cTimer::SetTime(Now,cTimer::TimeToInt(global->WakeupTime()));
     if (Time <= Now)
-       Time = cTimer::IncDay(Time,1);
+        Time = cTimer::IncDay(Time,1);
     return Time;
 }
 
@@ -198,7 +245,7 @@ cOsdObject *cPluginInfosatepg::MainMenuAction(void)
 
 cMenuSetupPage *cPluginInfosatepg::SetupMenu(void)
 {
-    // Returns the setup menu.
+    // Return the setup menu.
     return new cMenuSetupInfosatepg(global);
 }
 
@@ -209,7 +256,6 @@ bool cPluginInfosatepg::SetupParse(const char *Name, const char *Value)
     else if (!strcasecmp(Name,"Pid")) global->Pid=atoi(Value);
     else if (!strcasecmp(Name,"WaitTime")) global->WaitTime=atoi(Value);
     else if (!strcasecmp(Name,"EventTimeDiff")) global->EventTimeDiff=60*atoi(Value);
-    else if (!strcasecmp(Name,"WakeupTime")) global->WakeupTime=atoi(Value);
     else if (!strncasecmp(Name,"Channel",7))
     {
         if (strlen(Name)<10) return false;
@@ -247,17 +293,36 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
     {
         int day,month;
         asprintf(&output,"InfosatEPG state:\n");
-        if (global->isLocked(&day,&month))
-            asprintf(&output,"%s Locked: yes (%02i.%02i)",output,day,month);
+        if (global->ReceivedAll(&day,&month))
+            asprintf(&output,"%s Received all: yes (%02i.%02i.)",output,day,month);
         else
-            asprintf(&output,"%s Locked: no",output);
-        asprintf(&output,"%s Switched: %s\n",output,global->isSwitched() ? "yes" : "no");
+            asprintf(&output,"%s Received all: no",output);
+        asprintf(&output,"%s Processed all: %s",output,global->ProcessedAll ? "yes" : "no");
+        if (global->Switched())
+        {
+            asprintf(&output,"%s Switched: yes (%i)\n",output,global->dev->DeviceNumber()+1);
+        }
+        else
+        {
+            asprintf(&output,"%s Switched: no\n",output);
+        }
+        if (global->WakeupTime()!=-1)
+        {
+            int hour,minute;
+            hour=(int) (global->WakeupTime()/100);
+            minute=global->WakeupTime()-(hour*100);
+            asprintf(&output,"%s WakeupTime: %02i:%02i\n", output,hour,minute);
+        }
+        else
+        {
+            asprintf(&output,"%s WakeupTime: unset\n", output);
+        }
         for (int mac=EPG_FIRST_DAY_MAC; mac<=EPG_LAST_DAY_MAC; mac++)
         {
             asprintf(&output,"%s Day %i (%02i.%02i.): %3i%% %s\n",
                      output,mac,global->Infosatdata[mac].Day(),global->Infosatdata[mac].Month(),
                      global->Infosatdata[mac].ReceivedPercent(),
-                     global->Infosatdata[mac].wasProcessed() ? "processed" : "");
+                     global->Infosatdata[mac].Processed ? "processed" : "");
         }
     }
     return output;

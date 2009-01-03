@@ -16,7 +16,6 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg(cGlobalInfosatepg *Global)
     newChannel = global->Channel;
     newPid = global->Pid;
     newWaitTime = global->WaitTime;
-    newWakeupTime = global->WakeupTime;
     newEventTimeDiff=(int) (global->EventTimeDiff/60);
 
     Add(NewTitle(tr("Scan parameter")));
@@ -27,9 +26,6 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg(cGlobalInfosatepg *Global)
     Add(new cMenuEditIntItem( tr("Wait time [s]"), &newWaitTime,MIN_WAITTIME,MAX_WAITTIME));
     Add(new cMenuEditIntItem( tr("Time difference [min]"), &newEventTimeDiff,
                               MIN_EVENTTIMEDIFF,MAX_EVENTTIMEDIFF));
-
-    Add(NewTitle(tr("Wakeup options")));
-    Add(new cMenuEditTimeItem(tr("Wakeup time"),&newWakeupTime));
 
     if (global->InfosatChannels())
     {
@@ -66,26 +62,30 @@ void cMenuSetupInfosatepg::Store(void)
     SetupStore("Pid", global->Pid = newPid);
     SetupStore("WaitTime", global->WaitTime = newWaitTime);
     SetupStore("EventTimeDiff", newEventTimeDiff);
-    SetupStore("WakeupTime",global->WakeupTime = newWakeupTime);
     global->EventTimeDiff = 60*newEventTimeDiff;
 
-    if (bReprocess) global->ResetProcessedFlags();
+    if (bReprocess)
+    {
+        dsyslog("infosatepg: reprocess files (later)");
+        global->ResetProcessed();
+    }
 }
 
 eOSState cMenuSetupInfosatepg::Edit()
 {
     if (HasSubMenu() || Count()==0)
-        return osBack;
+        return osUnknown;
+
     if (Current()>=chanCurrent)
     {
         int chanIndex=Current()-chanCurrent;
         if (chanIndex<global->InfosatChannels())
             return AddSubMenu(new cMenuSetupChannelMenu(global,chanIndex));
         else
-            return osBack;
+            return osUnknown;
     }
     else
-        return osBack;
+        return osUnknown;
 }
 
 eOSState cMenuSetupInfosatepg::ProcessKey(eKeys Key)
@@ -100,8 +100,12 @@ eOSState cMenuSetupInfosatepg::ProcessKey(eKeys Key)
             switch (Key)
             {
             case kOk:
-                state=Edit();
-                if (state==osBack) Store();
+		state=Edit();
+                if (state==osUnknown)
+                {
+                    Store();
+                    state=osBack;
+                }
                 break;
             default:
                 break;
@@ -128,6 +132,7 @@ cMenuSetupChannelMenu::cMenuSetupChannelMenu(cGlobalInfosatepg *Global, int Inde
     if (newChannelUse<0) newChannelUse=USE_NOTHING; // to be safe!
 
     channel = Channels.GetByChannelID(global->GetChannelID(index));
+    if (!channel) return;
 
     char *str;
     asprintf(&str,"---- %s ----", channel->Name());
@@ -151,5 +156,9 @@ void cMenuSetupChannelMenu::Store(void)
     if (global->SetChannelUse(index,newChannelUse)) bReprocess=true;
     SetupStore(name,newChannelUse);
     free(name);
-    if (bReprocess) global->ResetProcessedFlags();
+    if (bReprocess)
+    {
+        dsyslog("infosatepg: reprocess files (later)");
+        global->ResetProcessed();
+    }
 }
