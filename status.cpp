@@ -23,27 +23,26 @@ cStatusInfosatepg::~cStatusInfosatepg(void)
 
 void cStatusInfosatepg::ChannelSwitch(const cDevice *Device, int ChannelNumber)
 {
+    if (!ChannelNumber) return;
+    if (!Device) return; // just to be safe
+
     bool bAddFilter=false;
 
     // just add filter if we aren't locked
     if (ChannelNumber==global->Channel)
     {
-        if (Device!=global->dev) return; // don't use virtual devices (they will switch too)
+        cChannel *chan=Channels.GetByNumber(global->Channel);
+        if (!chan) return;
+        if (!Device->ProvidesTransponder(chan)) return; // ignore virtual devices
+        if (Device==myFilterDevice) return; // already attached to this device
         if (!global->ReceivedAll()) bAddFilter=true;
     }
 
     if (bAddFilter)
     {
+        if (myFilterDevice) return; // already attached to another device
 
-        if ((myFilterDevice) && (myFilter))
-        {
-            if (myFilterDevice==Device) return; // already attached -> bail out
-            dsyslog("infosatepg: detach previously attached filter");
-            myFilterDevice->Detach(myFilter);
-        }
-
-        myFilterDevice = Device->GetDevice(Device->DeviceNumber());
-        if (!myFilterDevice) return;
+        myFilterDevice = (cDevice *) Device;
 
         dsyslog("switching device %i to channel %i (infosatepg)",
                 Device->DeviceNumber()+1,ChannelNumber);
@@ -59,7 +58,6 @@ void cStatusInfosatepg::ChannelSwitch(const cDevice *Device, int ChannelNumber)
                 dsyslog("infosatepg: detach filter");
                 myFilterDevice->Detach(myFilter);
                 myFilterDevice=NULL;
-                global->dev=NULL;
                 global->SetWaitTimer();
                 global->SetSwitched(false);
             }

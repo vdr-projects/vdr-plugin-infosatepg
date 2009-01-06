@@ -125,9 +125,9 @@ public:
     cGlobalInfosatepg();
     ~cGlobalInfosatepg();
     cGlobalInfosatdata Infosatdata[EPG_DAYS+1];
-    cDevice *dev;
     void SetWakeupTime(int Time)
     {
+        dsyslog("infosatepg: time=%i",Time);
         if (Time==-1) return;
         if (wakeuptime!=-1) return; // already set
         int hour,minute;

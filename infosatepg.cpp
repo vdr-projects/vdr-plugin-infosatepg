@@ -157,7 +157,6 @@ void cPluginInfosatepg::MainThreadHook(void)
         {
             // ok -> use this device
             dsyslog("infosatepg: found free device %i (live)",dev->DeviceNumber()+1);
-            global->dev=dev;
             if (global->LastCurrentChannel==-1) global->LastCurrentChannel=
                     cDevice::PrimaryDevice()->CurrentChannel();
             cDevice::PrimaryDevice()->SwitchChannel(chan,true);
@@ -178,7 +177,6 @@ void cPluginInfosatepg::MainThreadHook(void)
             {
                 // just use this device
                 dsyslog("infosatepg: found already switched device %i",dev->DeviceNumber()+1);
-                global->dev=dev;
                 if (cDevice::ActualDevice()->CardIndex()==i)
                     cDevice::PrimaryDevice()->SwitchChannel(chan,true);
                 else
@@ -193,7 +191,6 @@ void cPluginInfosatepg::MainThreadHook(void)
 
             // ok -> use this device
             dsyslog("infosatepg: found free device %i",dev->DeviceNumber()+1);
-            global->dev=dev;
             dev->SwitchChannel(chan,false);
             global->SetWaitTimer();
             return;
@@ -215,11 +212,12 @@ cString cPluginInfosatepg::Active(void)
         if (cDevice::PrimaryDevice()->CurrentChannel()==global->Channel)
         {
             // we are still on infosatepg channel
-            cChannel *chan=Channels.GetByNumber(global->Channel);
+            cChannel *chan=Channels.GetByNumber(global->LastCurrentChannel);
             if (chan)
             {
                 // switch back to users last viewed channel
                 cDevice::PrimaryDevice()->SwitchChannel(chan,true);
+                global->LastCurrentChannel=-1;
             }
         }
     }
@@ -298,24 +296,22 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
         else
             asprintf(&output,"%s Received all: no",output);
         asprintf(&output,"%s Processed all: %s",output,global->ProcessedAll ? "yes" : "no");
-        if (global->Switched())
-        {
-            asprintf(&output,"%s Switched: yes (%i)\n",output,global->dev->DeviceNumber()+1);
-        }
-        else
-        {
-            asprintf(&output,"%s Switched: no\n",output);
-        }
+        asprintf(&output,"%s Switched: %s\n",output,global->Switched() ? "yes" : "no");
         if (global->WakeupTime()!=-1)
         {
-            int hour,minute;
-            hour=(int) (global->WakeupTime()/100);
-            minute=global->WakeupTime()-(hour*100);
-            asprintf(&output,"%s WakeupTime: %02i:%02i\n", output,hour,minute);
+            asprintf(&output,"%s WakeupTime: %04i ", global->WakeupTime());
         }
         else
         {
-            asprintf(&output,"%s WakeupTime: unset\n", output);
+            asprintf(&output,"%s WakeupTime: unset ", output);
+        }
+        if (global->LastCurrentChannel!=-1)
+        {
+            asprintf(&output,"%s Switchback to: %i\n", output, global->LastCurrentChannel);
+        }
+        else
+        {
+            asprintf(&output,"%s Switchback to: unset\n",output);
         }
         for (int mac=EPG_FIRST_DAY_MAC; mac<=EPG_LAST_DAY_MAC; mac++)
         {
