@@ -130,11 +130,11 @@ public:
         dsyslog("infosatepg: time=%i",Time);
         if (Time==-1) return;
         if (wakeuptime!=-1) return; // already set
+        wakeuptime=Time;
         int hour,minute;
         hour=(int) (wakeuptime/100);
         minute=wakeuptime-(hour*100);
         isyslog("infosatepg: wakeup set to %02i:%02i", hour,minute);
-        wakeuptime=Time;
     }
     int WakeupTime()
     {

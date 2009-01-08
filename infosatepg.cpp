@@ -173,21 +173,17 @@ void cPluginInfosatepg::MainThreadHook(void)
         if (dev)
         {
             if (!dev->ProvidesTransponder(chan)) continue; // device cannot provide transponder -> skip
-            if (dev->IsTunedToTransponder(chan))
-            {
-                // just use this device
-                dsyslog("infosatepg: found already switched device %i",dev->DeviceNumber()+1);
-                if (cDevice::ActualDevice()->CardIndex()==i)
-                    cDevice::PrimaryDevice()->SwitchChannel(chan,true);
-                else
-                    dev->SwitchChannel(chan,false);
-                global->SetWaitTimer();
-                return;
-            }
             if (EITScanner.UsesDevice(dev)) continue; // EITScanner is updating EPG -> skip
             if (dev->Receiving()) continue; // device is recording -> skip
             if (dev->IsPrimaryDevice()) continue; // device is primary -> skip
             if (cDevice::ActualDevice()->CardIndex()==i) continue; // device is live viewing -> skip
+            if (dev->IsTunedToTransponder(chan))
+            {
+                // we already have a device which is tuned (maybe switched manually?)
+                // the filter will be added in status.cpp
+                global->SetWaitTimer();
+                return;
+            }
 
             // ok -> use this device
             dsyslog("infosatepg: found free device %i",dev->DeviceNumber()+1);
@@ -299,7 +295,7 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
         asprintf(&output,"%s Switched: %s\n",output,global->Switched() ? "yes" : "no");
         if (global->WakeupTime()!=-1)
         {
-            asprintf(&output,"%s WakeupTime: %04i ", global->WakeupTime());
+            asprintf(&output,"%s WakeupTime: %04i ", output,global->WakeupTime());
         }
         else
         {
