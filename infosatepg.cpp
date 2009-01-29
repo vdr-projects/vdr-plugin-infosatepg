@@ -255,7 +255,8 @@ bool cPluginInfosatepg::SetupParse(const char *Name, const char *Value)
         if (strlen(Name)<10) return false;
         tChannelID ChannelID=tChannelID::FromString(&Name[8]);
         if (ChannelID==tChannelID::InvalidID) return false;
-        global->AddChannel(ChannelID,atoi(Value));
+        int val=atoi(Value);
+        global->AddChannel(ChannelID,(val & 0xFFFF),(val & 0xF0000)>>16);
     }
     else return false;
     return true;

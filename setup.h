@@ -37,7 +37,7 @@ class cMenuSetupChannelMenu : public cMenuSetupPage
 {
 private:
   cGlobalInfosatepg *global;
-  const char * ChannelUseText[6];
+  int newDays;
   int newChannelUse;
   int index;
   cChannel *channel;

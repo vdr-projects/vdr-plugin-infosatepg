@@ -174,13 +174,16 @@ bool cGlobalInfosatepg::CheckMAC(struct ethhdr *eth_hdr)
     return true;
 }
 
-void cGlobalInfosatepg::AddChannel(tChannelID ChannelID,int Usage)
+void cGlobalInfosatepg::AddChannel(tChannelID ChannelID,int Usage,int Days)
 {
     infosatchannels= (struct infosatchannels *) realloc (infosatchannels,
                      (numinfosatchannels+1) *sizeof (struct infosatchannels));
     if (!infosatchannels) return;
     infosatchannels[numinfosatchannels].ChannelID=ChannelID;
-    infosatchannels[numinfosatchannels].Usage=Usage;
+    infosatchannels[numinfosatchannels].Usage=Usage & 0xFFFF;
+    if (Days<=0) Days=1;
+    if (Days>EPG_DAYS) Days=EPG_DAYS;
+    infosatchannels[numinfosatchannels].Days=Days;
     numinfosatchannels++;
 }
 
@@ -220,21 +223,29 @@ bool cGlobalInfosatepg::ChannelExists(tChannelID ChannelID,int *Index)
     return false;
 }
 
-bool cGlobalInfosatepg::SetChannelUse(int Index,int Usage)
+bool cGlobalInfosatepg::SetChannelOptions(int Index,int Usage,int Days)
 {
     if (numinfosatchannels==0) return false;
     if ((Index<0) || (Index>numinfosatchannels-1)) return false;
     bool ret=false;
-    if (infosatchannels[Index].Usage!=Usage) ret=true;
+    if ((infosatchannels[Index].Usage!=Usage) | (infosatchannels[Index].Days!=Days)) ret=true;
     infosatchannels[Index].Usage=Usage;
+    infosatchannels[Index].Days=Days;
     return ret;
 }
 
-int cGlobalInfosatepg::GetChannelUse(int Index)
+int cGlobalInfosatepg::GetChannelUsage(int Index)
 {
     if (numinfosatchannels==0) return USE_NOTHING;
     if ((Index<0) || (Index>numinfosatchannels-1)) return USE_NOTHING;
     return infosatchannels[Index].Usage;
+}
+
+int cGlobalInfosatepg::GetChannelDays(int Index)
+{
+    if (numinfosatchannels==0) return 0;
+    if ((Index<0) || (Index>numinfosatchannels-1)) return 0;
+    return infosatchannels[Index].Days;
 }
 
 int cGlobalInfosatepg::Save()

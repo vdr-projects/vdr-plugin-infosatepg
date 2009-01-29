@@ -14,6 +14,25 @@
 #include "process.h"
 #include "readline.h"
 
+char *strcatrealloc(char *dest, const char *src)
+{
+    if (!src || !*src)
+        return dest;
+
+    size_t l = (dest ? strlen(dest) : 0) + strlen(src) + 1;
+    if (dest)
+    {
+        dest = (char *)realloc(dest, l);
+        strcat(dest, src);
+    }
+    else
+    {
+        dest = (char*)malloc(l);
+        strcpy(dest, src);
+    }
+    return dest;
+}
+
 // --- cInfosatevent
 cInfosatevent::cInfosatevent()
 {
@@ -24,6 +43,7 @@ cInfosatevent::cInfosatevent()
     country=NULL;
     genre=NULL;
     original=NULL;
+    extepg=NULL;
     year=-1;
     fsk=-1;
     category=-1;
@@ -40,6 +60,7 @@ cInfosatevent::~cInfosatevent()
     free(country);
     free(genre);
     free(original);
+    free(extepg);
 }
 
 void cInfosatevent::SetOriginal(const char *Original)
@@ -77,57 +98,60 @@ void cInfosatevent::SetDescription(const char *Description)
     description = strcpyrealloc(description, Description);
 }
 
-const char *cInfosatevent::Description(const char *oldDescription)
+const char *cInfosatevent::ExtEPG(void)
 {
-    //  Add Category:, Genre:, Year:, Country:, Originaltitle:, FSK: , Rating: [if available] ...
-    /*
-      char fmt[100];
-      char *descr;
+    //  Returns Category:, Genre:, Year:, Country:, Originaltitle:, FSK: , Rating: [if available] ...
+    char fmt[100];
 
-      if (oldDescription) {
-         descr=(char *) oldDescription;
-         char *extEPG=strstr(descr,"\n\n");
-         if (extEPG) *extEPG=0;
-      } else {
-         descr=description;
-      }
+    if (extepg)
+    {
+        free(extepg);
+        extepg=NULL;
+    }
 
-      descr=strcatrealloc(descr,"\n\n");
+    extepg=strcatrealloc(extepg,"\n\n");
 
-      if (category!=-1) {
-        descr=strcatrealloc(descr,"Category: ");
-        descr=strcatrealloc(descr,Category());
-        descr=strcatrealloc(descr,"\n");
-      }
-      if (genre) {
-        descr=strcatrealloc(descr,"Genre: ");
-        descr=strcatrealloc(descr,Genre());
-        descr=strcatrealloc(descr,"\n");
-      }
-      if (year!=-1) {
-        strncat(fmt,"Year: %i\n",9);
-      }
-      if (country) {
-        descr=strcatrealloc(descr,"Country: ");
-        descr=strcatrealloc(descr,Country());
-        descr=strcatrealloc(descr,"\n");
-      }
-      if (original) {
-        descr=strcatrealloc(descr,"Originaltitle: ");
-        descr=strcatrealloc(descr,Original());
-        descr=strcatrealloc(descr,"\n");
-      }
-      if (fsk!=-1) {
-        strncat(fmt,"FSK: %i\n",8);
-      }
-      if (announcement) {
-        descr=strcatrealloc(descr,"Rating: ");
-        descr=strcatrealloc(descr,Announcement());
-        descr=strcatrealloc(descr,"\n");
-      }
+    if (category!=-1)
+    {
+        sprintf(fmt,"Category: %i\n",category);
+        extepg=strcatrealloc(extepg,fmt);
+    }
+    if (genre)
+    {
+        extepg=strcatrealloc(extepg,"Genre: ");
+        extepg=strcatrealloc(extepg,genre);
+        extepg=strcatrealloc(extepg,"\n");
+    }
+    if (year!=-1)
+    {
+        sprintf(fmt,"Year: %i\n",year);
+        extepg=strcatrealloc(extepg,fmt);
+    }
+    if (country)
+    {
+        extepg=strcatrealloc(extepg,"Country: ");
+        extepg=strcatrealloc(extepg,country);
+        extepg=strcatrealloc(extepg,"\n");
+    }
+    if (original)
+    {
+        extepg=strcatrealloc(extepg,"Originaltitle: ");
+        extepg=strcatrealloc(extepg,original);
+        extepg=strcatrealloc(extepg,"\n");
+    }
+    if (fsk!=-1)
+    {
+        sprintf(fmt,"FSK: %i\n",fsk);
+        extepg=strcatrealloc(extepg,fmt);
+    }
+    if (announcement)
+    {
+        extepg=strcatrealloc(extepg,"Rating: ");
+        extepg=strcatrealloc(extepg,announcement);
+        extepg=strcatrealloc(extepg,"\n");
+    }
 
-    */
-    return (const char*) description;
+    return (const char*) extepg;
 }
 
 // --- cProcessInfosatepg
@@ -181,9 +205,11 @@ cEvent *cProcessInfosatepg::SearchEvent(cSchedule* Schedule, cInfosatevent *iEve
 bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEvent)
 {
     if ((!channel) || (!iEvent)) return true;
-    if (iEvent->GetEventUse()==USE_NOTHING) return true; // this should never happen!
+    if (iEvent->Usage()==USE_NOTHING) return true; // this should never happen!
     if (iEvent->StartTime()<time(NULL)) return true; // don't deal with old events
-    if (iEvent->StartTime()>(time(NULL)+86400)) return true; // don't deal with events to far in the future
+
+    // don't deal with events to far in the future
+    if (iEvent->StartTime()>(time(NULL)+(iEvent->Days()*86400))) return true;
 
     cSchedulesLock SchedulesLock(true,2000); // to be safe ;)
     const cSchedules *Schedules = cSchedules::Schedules(SchedulesLock);
@@ -191,13 +217,14 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
     cSchedule* Schedule = (cSchedule *) Schedules->GetSchedule(channel,true);
     if (!Schedule) return true;
 
-    time_t start;
-
+    time_t start=0;
+    cEvent *Event=NULL;
     const cEvent *lastEvent=Schedule->Events()->Last();
+
     if ((lastEvent) && (iEvent->StartTime()<lastEvent->EndTime()))
     {
-        // try to find, 1st with EventID
-        cEvent *Event = (cEvent *) Schedule->GetEvent(iEvent->EventID());
+        // try to find, 1st with our own EventID
+        Event = (cEvent *) Schedule->GetEvent(iEvent->EventID());
         // 2nd with StartTime +/- WaitTime
         if (!Event) Event= (cEvent *) SearchEvent(Schedule,iEvent);
         if (!Event) return true; // just bail out with ok
@@ -206,50 +233,84 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
         dsyslog("infosatepg: ievent %s [%s]", iEvent->Title(),ctime(&start));
 
         // change existing event
-        Event->SetShortText(iEvent->ShortText());
-        if (iEvent->GetEventUse()==USE_SHORTLONGTEXT)
-        {
-            Event->SetDescription(iEvent->Description(NULL));
-        }
-        if (iEvent->GetEventUse()==USE_SHORTTEXTEPG)
-        {
-            Event->SetDescription(iEvent->Description(Event->Description()));
-        }
-        if (iEvent->GetEventUse()==USE_INTELLIGENT)
-        {
-            if (!Event->Description() || (!iEvent->Description(NULL)))
-            {
-                Event->SetDescription(iEvent->Description(NULL));
-            }
-            else
-            {
-                if (strlen(iEvent->Description(NULL))>strlen(Event->Description()))
-                {
-                    Event->SetDescription(iEvent->Description(NULL));
-                }
-            }
-        }
         Event->SetTableID(0);
-        Event->SetSeen();
-        start=Event->StartTime();
-        dsyslog("infosatepg: changed event %s [%s]",Event->Title(),ctime(&start));
     }
     else
     {
         // we are beyond the last event, so just add (if we should)
-        if (iEvent->GetEventUse()!=USE_ALL) return true;
-        start=iEvent->StartTime();
-        cEvent *Event = new cEvent(iEvent->EventID());
+        if ((iEvent->Usage() & USE_APPEND)!=USE_APPEND) return true;
+        Event = new cEvent(iEvent->EventID());
         if (!Event) return true;
-        Event->SetTitle(iEvent->Title());
-        Event->SetShortText(iEvent->ShortText());
-        Event->SetDescription(iEvent->Description(NULL));
         Event->SetStartTime(iEvent->StartTime());
         Event->SetDuration(iEvent->Duration());
-        Event->SetVersion(0);
+        Event->SetTitle(iEvent->Title());
         start=iEvent->StartTime();
         dsyslog("infosatepg: adding new event %s [%s]",iEvent->Title(),ctime(&start));
         Schedule->AddEvent(Event);
+    }
+
+    if ((iEvent->Usage() & USE_SHORTTEXT) == USE_SHORTTEXT)
+    {
+        Event->SetShortText(iEvent->ShortText());
+    }
+
+    if ((iEvent->Usage() & USE_LONGTEXT) == USE_LONGTEXT)
+    {
+        if ((iEvent->Usage() & USE_MERGELONGTEXT)==USE_MERGELONGTEXT)
+        {
+            // first check if we have a description
+            const char *iDescr=iEvent->Description();
+            if (iDescr)
+            {
+                const char *oDescr=Event->Description();
+                if (oDescr)
+                {
+                    // there is an "old" description
+                    if (strlen(iDescr)>strlen(oDescr))
+                    {
+                        // more text in infosat
+                        Event->SetDescription(iEvent->Description());
+                    }
+                }
+                else
+                {
+                    // event has no description, just use infosat one
+                    Event->SetDescription(iEvent->Description());
+                }
+            }
+        }
+        else
+        {
+            // just do it the easy way
+            Event->SetDescription(iEvent->Description());
+        }
+    }
+
+    if ((iEvent->Usage() & USE_EXTEPG)==USE_EXTEPG)
+    {
+        const char *oDescr=Event->Description();
+        const char *extEPG=iEvent->ExtEPG();
+
+        if (extEPG)
+        {
+            // we have extended EPG info
+            if (!oDescr)
+            {
+                // no old description -> just use extEPG
+                Event->SetDescription(extEPG);
+            }
+            else
+            {
+                // add extEPG to description
+                char *nDescr=strdup(oDescr);
+
+                strreplace(nDescr,extEPG,"");
+
+                nDescr=strcatrealloc(nDescr,extEPG);
+                Event->SetDescription(nDescr);
+                free(nDescr);
+            }
+        }
     }
 
     return true;
@@ -387,11 +448,11 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
                             Skins.QueueMessage(mtInfo,tr("Infosat channellist available"));
                         }
                         // Channel is not in global list->add
-                        global->AddChannel(chan->GetChannelID(),USE_NOTHING);
+                        global->AddChannel(chan->GetChannelID(),USE_NOTHING,1);
                     }
                     else
                     {
-                        if (global->GetChannelUse(index)!=USE_NOTHING)
+                        if (global->GetChannelUsage(index)!=USE_NOTHING)
                         {
                             memset(&tm,0,sizeof(tm));
                             tm.tm_sec=0;
@@ -455,7 +516,8 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
                 ievent->SetStartTime(start);
                 ievent->SetTitle(conv->Convert(title));
                 free(title);
-                ievent->SetEventUse(global->GetChannelUse(index));
+                ievent->SetEventUsage(global->GetChannelUsage(index));
+                ievent->SetEventDays(global->GetChannelDays(index));
                 ievent->SetEventID(DoSum(ieventnr++,ievent->Title(),strlen(ievent->Title())));
             }
             else

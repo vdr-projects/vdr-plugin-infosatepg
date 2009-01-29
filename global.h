@@ -16,10 +16,10 @@
 #include <vdr/timers.h>
 #include <vdr/device.h>
 
-#define MIN_WAITTIME 10
-#define MAX_WAITTIME 120
-#define MIN_EVENTTIMEDIFF 5
-#define MAX_EVENTTIMEDIFF 10
+#define MIN_WAITTIME 10      // s
+#define MAX_WAITTIME 120     // s
+#define MIN_EVENTTIMEDIFF 5  // min
+#define MAX_EVENTTIMEDIFF 10 // min
 
 class cGlobalInfosatdata
 {
@@ -76,39 +76,37 @@ public:
     void Init (char *File, int Day, int Month, int Packetcount);
     int Load (int fd);
     int Save (int fd);
-#ifdef INFOSATEPG_DEBUG
-    void Debug (const char *Directory);
-#endif
+    #ifdef INFOSATEPG_DEBUG
+     void Debug (const char *Directory);
+    #endif
 };
 
 class cGlobalInfosatepg
 {
-#define USE_NOTHING       0
+    // Usage field definition
+    // Bit 0-15   USE_ flags
+    // Bit 16-19  DAYS in advance
+    // Bit 20-30  reserved for future used
+    // Bit 31     always zero
 
-
-#define USE_SHORTTEXT     1
-#define USE_SHORTLONGTEXT 2
-#define USE_SHORTTEXTEPG  3
-#define USE_INTELLIGENT   4
-#define USE_ALL           5
-
-    /*
-    #define USE_NOTHING       0
     #define USE_SHORTTEXT     1
     #define USE_LONGTEXT      2
     #define USE_EXTEPG        4
-    #define
-    */
+    #define USE_MERGELONGTEXT 8
+    #define USE_APPEND        16
+
+    #define USE_NOTHING       0
 
     struct infosatchannels
     {
         tChannelID ChannelID;
+        int Days;
         int Usage;
     };
 
-#define EPG_FIRST_DAY_MAC 1
-#define EPG_LAST_DAY_MAC  7
-#define EPG_DAYS          7
+    #define EPG_FIRST_DAY_MAC 1
+    #define EPG_LAST_DAY_MAC  7
+    #define EPG_DAYS          7
 
 private:
     const char *directory;
@@ -169,18 +167,21 @@ public:
     }
     int Load();
     int Save();
+
     bool ProcessedAll;
+    void ResetProcessed (void);
     bool ReceivedAll (int *Day, int *Month);
     bool ReceivedAll()
     {
         return ReceivedAll (NULL,NULL);
     }
-    void AddChannel (tChannelID ChannelID,int Usage);
+
+    void AddChannel (tChannelID ChannelID,int Usage, int Days);
     void RemoveChannel(int Index);
     tChannelID GetChannelID (int Index);
-    bool SetChannelUse (int Index,int Usage);
-    void ResetProcessed (void);
-    int GetChannelUse (int Index);
+    bool SetChannelOptions(int Index,int Usage,int Days);
+    int GetChannelUsage(int Index);
+    int GetChannelDays(int Index);
     bool ChannelExists (tChannelID ChannelID,int *Index);
     int InfosatChannels()
     {

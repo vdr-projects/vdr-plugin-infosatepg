@@ -28,6 +28,8 @@ private:
   int fsk;
   int year;
   int usage;
+  int days;
+  char *extepg;
   tEventID eventID;
 public:
   cInfosatevent();
@@ -37,18 +39,17 @@ public:
   void SetDescription(const char *Description);
   void SetStartTime(time_t StartTime) { startTime=StartTime; }
   void SetDuration(int Duration) { duration=Duration; }
-  void SetEventUse(int Usage) { usage=Usage; }
+  void SetEventUsage(int Usage) { usage=Usage; }
+  void SetEventDays(int Days) { days=Days; }
   void SetYear(int Year) { year=Year; }
   void SetEventID(tEventID EventID) { eventID=EventID; }
   void SetCategory(int Category) { category=Category; }
   void SetFSK(int FSK) { fsk=FSK; }
-
   void SetAnnouncement(const char *Announcement);
   void SetCountry(const char *Country);
   void SetGenre(const char *Genre);
   void SetOriginal(const char *Original);
-  const char *Description(const char *oldDescription);
-
+  const char *Description(void) const { return description; }
   const char *Title(void) const { return title; }
   const char *ShortText(void) const { return shortText; }
   const char *Announcement(void) const { return announcement; }
@@ -60,8 +61,10 @@ public:
   int FSK(void) const { return fsk; }
   int Category(void) const { return category; }
   time_t StartTime(void) const { return startTime; }
-  int GetEventUse() { return usage; }
+  int Usage() { return usage; }
+  int Days() { return days; }
   tEventID EventID(void) const { return eventID; }
+  const char *ExtEPG(void);
 };
 
 // --- cProcessInfosatepg
