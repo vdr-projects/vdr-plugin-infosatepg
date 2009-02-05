@@ -17,11 +17,15 @@ class cMenuSetupInfosatepg : public cMenuSetupPage
 {
 private:
   cGlobalInfosatepg *global;
-  int newChannel;
+  //int newChannel;
   int newWaitTime;
   int newWakeupTime;
   int newEventTimeDiff;
+  int newFrequency;
+  char newPolarization;
+  int newSrate;
   int newPid;
+  int newNoWakeup;
   int chanCurrent;
 protected:
   virtual void Store(void);

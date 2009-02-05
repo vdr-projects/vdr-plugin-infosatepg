@@ -90,6 +90,8 @@ bool cPluginInfosatepg::Initialize(void)
             // Removing entries from setup.conf is not possible!
         }
     }
+    if (!global->FindReceiverChannel())
+        esyslog("infosatepg: found no channel to receive, check setup");
     return true;
 }
 
@@ -102,10 +104,6 @@ bool cPluginInfosatepg::Start(void)
     }
     statusMonitor = new cStatusInfosatepg(global);
 
-#ifdef INFOSATEPG_DEBUG
-    global->Infosatdata[2].Debug(global->Directory());
-    cProcessInfosatepg process(2,global);
-#endif
     return true;
 }
 
@@ -127,7 +125,8 @@ void cPluginInfosatepg::Housekeeping(void)
         {
             isyslog ("infosatepg: janitor found data to be processed: day=%i month=%i",
                      global->Infosatdata[mac].Day(),global->Infosatdata[mac].Month());
-            cProcessInfosatepg process (mac,global);
+            cProcessInfosatepg process(mac,global);
+            //process.Start();
         }
     }
     int numprocessed=0;
@@ -143,9 +142,10 @@ void cPluginInfosatepg::Housekeeping(void)
 void cPluginInfosatepg::MainThreadHook(void)
 {
     // Perform actions in the context of the main program thread.
-    if ((!global->WaitOk()) || (global->Switched()) || (global->ReceivedAll())) return;
+    if ((!global->WaitOk()) || (global->Switched()) || (global->ReceivedAll()) ||
+            (global->Channel()==-1)) return;
 
-    cChannel *chan=Channels.GetByNumber(global->Channel);
+    cChannel *chan=Channels.GetByNumber(global->Channel());
     if (!chan) return;
 
     if (ShutdownHandler.IsUserInactive())
@@ -205,7 +205,7 @@ cString cPluginInfosatepg::Active(void)
     if (global->LastCurrentChannel!=-1)
     {
         // we switched from users last channel
-        if (cDevice::PrimaryDevice()->CurrentChannel()==global->Channel)
+        if (cDevice::PrimaryDevice()->CurrentChannel()==global->Channel())
         {
             // we are still on infosatepg channel
             cChannel *chan=Channels.GetByNumber(global->LastCurrentChannel);
@@ -223,6 +223,7 @@ cString cPluginInfosatepg::Active(void)
 time_t cPluginInfosatepg::WakeupTime(void)
 {
     // Returns custom wakeup time for shutdown script
+    if (global->NoWakeup) return 0;
     if (global->WakeupTime()==-1) global->SetWakeupTime(300); // just to be safe
     time_t Now = time(NULL);
     time_t Time = cTimer::SetTime(Now,cTimer::TimeToInt(global->WakeupTime()));
@@ -246,8 +247,7 @@ cMenuSetupPage *cPluginInfosatepg::SetupMenu(void)
 bool cPluginInfosatepg::SetupParse(const char *Name, const char *Value)
 {
     // Parse your own setup parameters and store their values.
-    if      (!strcasecmp(Name,"Channel")) global->Channel=atoi(Value);
-    else if (!strcasecmp(Name,"Pid")) global->Pid=atoi(Value);
+    if      (!strcasecmp(Name,"Pid")) global->Pid=atoi(Value);
     else if (!strcasecmp(Name,"WaitTime")) global->WaitTime=atoi(Value);
     else if (!strcasecmp(Name,"EventTimeDiff")) global->EventTimeDiff=60*atoi(Value);
     else if (!strncasecmp(Name,"Channel",7))
@@ -297,6 +297,7 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
         if (global->WakeupTime()!=-1)
         {
             asprintf(&output,"%s WakeupTime: %04i ", output,global->WakeupTime());
+		if (global->NoWakeup) asprintf(&output,"%s (blocked) ",output);
         }
         else
         {

@@ -136,9 +136,6 @@ void cFilterInfosatepg::Process(u_short Pid, u_char Tid, const u_char *Data, int
     // Check if we already have this packet
     if (global->Infosatdata[mac].GetBit(ntohs(ishdr->pktnr))) return;
 
-    // set bit in Infosatdata bitfield
-    global->Infosatdata[mac].SetBit(ntohs(ishdr->pktnr),true);
-
 #ifdef VDRDEBUG
     dsyslog("infosatepg: mac=%02x-%02x-%02x-%02x-%02x-%02x",eth_hdr.h_dest[0],eth_hdr.h_dest[1],
             eth_hdr.h_dest[2],eth_hdr.h_dest[3],eth_hdr.h_dest[4],eth_hdr.h_dest[5] );
@@ -165,7 +162,11 @@ void cFilterInfosatepg::Process(u_short Pid, u_char Tid, const u_char *Data, int
 #ifdef VDRDEBUG
         dsyslog("infosatepg: writing to %li",offset);
 #endif
-        write(f,infosatdata,len);
+        if (write(f,infosatdata,len)==len)
+        {
+            // set bit in Infosatdata bitfield
+            global->Infosatdata[mac].SetBit(ntohs(ishdr->pktnr),true);
+        }
     }
     close(f);
 

@@ -79,7 +79,7 @@ int cGlobalInfosatdata::Load(int fd)
     if (ret!=sizeof (bitfield)) return -1;
     ret=read (fd,&file,sizeof (file));
     if (ret!=sizeof (file)) return -1;
-    dsyslog ("infosatepg: loaded file=%s",file);
+    if (file[0]!=0) dsyslog ("infosatepg: loaded file=%s",file);
     return ret;
 }
 
@@ -124,8 +124,11 @@ cGlobalInfosatepg::cGlobalInfosatepg()
     // set public member
     LastCurrentChannel=-1;
     Pid=1809;
+    Srate = 22000;
+    Frequency = 12604;
+    Polarization ='h';
     EventTimeDiff=480; // default 8 minutes
-    Channel=1;
+    channel=-1;
     MAC[0]=0x01;
     MAC[1]=0x00;
     MAC[2]=0x5e;
@@ -134,6 +137,7 @@ cGlobalInfosatepg::cGlobalInfosatepg()
     WaitTime=10; // default 10 seconds
     SetDirectory ("/tmp");
     ProcessedAll=false;
+    NoWakeup=false;
 }
 
 cGlobalInfosatepg::~cGlobalInfosatepg()
@@ -196,7 +200,6 @@ void cGlobalInfosatepg::RemoveChannel(int Index)
         infosatchannels[i].ChannelID=infosatchannels[i+1].ChannelID;
         infosatchannels[i].Usage=infosatchannels[i+1].Usage;
     }
-    //infosatchannels[numinfosatchannels].Usage=0;
     numinfosatchannels--;
 }
 
@@ -402,4 +405,26 @@ bool cGlobalInfosatepg::ReceivedAll(int *Day, int *Month)
     if (Month) *Month=this_month;
 
     return res;
+}
+
+bool cGlobalInfosatepg::FindReceiverChannel()
+{
+    cChannel *chan;
+    int source = cSource::FromString("S19.2E"); // only from astra 19.2E
+
+    for (int i=0; i<=Channels.MaxNumber(); i++)
+    {
+        chan = Channels.GetByNumber(i,0);
+        if (chan)
+        {
+            if (chan->Source()!=source) continue;
+            if (chan->Srate()!=Srate) continue;
+            if (chan->Frequency()!=Frequency) continue;
+            if (chan->Polarization()!=Polarization) continue;
+            channel=i;
+            return true;
+        }
+    }
+    channel=-1;
+    return false;
 }

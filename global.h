@@ -118,7 +118,7 @@ private:
     int numinfosatchannels;
     int wakeuptime;
     struct infosatchannels *infosatchannels;
-    void ResetReceivedAll(void);
+    int channel;
 public:
     cGlobalInfosatepg();
     ~cGlobalInfosatepg();
@@ -134,12 +134,17 @@ public:
         minute=wakeuptime-(hour*100);
         isyslog("infosatepg: wakeup set to %02i:%02i", hour,minute);
     }
+    bool NoWakeup;
     int WakeupTime()
     {
         return wakeuptime;
     }
     int LastCurrentChannel;
-    int Channel;
+    int Channel() { return channel; }
+    bool FindReceiverChannel();
+    int Frequency;
+    char Polarization;
+    int Srate;
     int Pid;
     int EventTimeDiff;
     int WaitTime;
@@ -170,6 +175,7 @@ public:
 
     bool ProcessedAll;
     void ResetProcessed (void);
+    void ResetReceivedAll(void);
     bool ReceivedAll (int *Day, int *Month);
     bool ReceivedAll()
     {

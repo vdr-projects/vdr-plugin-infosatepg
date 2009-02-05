@@ -29,9 +29,9 @@ void cStatusInfosatepg::ChannelSwitch(const cDevice *Device, int ChannelNumber)
     bool bAddFilter=false;
 
     // just add filter if we aren't locked
-    if (ChannelNumber==global->Channel)
+    if (ChannelNumber==global->Channel())
     {
-        cChannel *chan=Channels.GetByNumber(global->Channel);
+        cChannel *chan=Channels.GetByNumber(global->Channel());
         if (!chan) return;
         if (!Device->ProvidesTransponder(chan)) return; // ignore virtual devices
         if (Device==myFilterDevice) return; // already attached to this device

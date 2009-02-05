@@ -24,6 +24,7 @@ private:
   char *country;
   char *genre;
   char *original;
+  char *episode;
   int category;
   int fsk;
   int year;
@@ -49,6 +50,7 @@ public:
   void SetCountry(const char *Country);
   void SetGenre(const char *Genre);
   void SetOriginal(const char *Original);
+  void SetEpisode(const char *Episode);
   const char *Description(void) const { return description; }
   const char *Title(void) const { return title; }
   const char *ShortText(void) const { return shortText; }
@@ -56,6 +58,7 @@ public:
   const char *Genre(void) const { return genre; }
   const char *Country(void) const { return country; }
   const char *Original(void) const { return original; }
+  const char *Episode(void) const { return episode; }
   int Year(void) const { return year; }
   int Duration(void) const { return duration; }
   int FSK(void) const { return fsk; }
@@ -68,7 +71,7 @@ public:
 };
 
 // --- cProcessInfosatepg
-class cProcessInfosatepg
+class cProcessInfosatepg //: public cThread
 {
 private:
   cGlobalInfosatepg *global;
@@ -76,10 +79,11 @@ private:
   bool CheckOriginal(char *s,cInfosatevent *iEvent,cCharSetConv *conv);
   bool CheckAnnouncement(char *s,cInfosatevent *iEvent);
   bool ParseInfosatepg(FILE *f,int *firststarttime);
-  cChannel *GetInfosatChannel(int frequency, int sid);
+  cChannel *GetVDRChannel(int frequency, int sid);
   u_long DoSum(u_long sum, const char *buf, int nBytes);
   cEvent *SearchEvent(cSchedule* Schedule, cInfosatevent *iEvent);
 public:
+  //virtual void Action(); //(int Mac, cGlobalInfosatepg *Global);
   cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global);
 };
 

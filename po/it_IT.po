@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vdr-1.6.0\n"
 "Report-Msgid-Bugs-To: <see README>\n"
-"POT-Creation-Date: 2009-01-20 23:36+0100\n"
+"POT-Creation-Date: 2009-02-01 12:25+0100\n"
 "PO-Revision-Date: 2008-12-24 19:16+0100\n"
 "Last-Translator: Diego Pierotto <vdr-italian@tiscali.it>\n"
 "Language-Team:  <vdr@linuxtv.org>\n"
@@ -26,11 +26,26 @@ msgstr "Lista canale Infosat disponibile"
 msgid "Scan parameter"
 msgstr "Parametri scansione"
 
-msgid "Channel"
-msgstr "Canale"
+msgid "Source"
+msgstr "Sorgente"
+
+msgid "Frequency"
+msgstr "Frequenza"
+
+msgid "Polarization"
+msgstr "Polarizzazione"
+
+msgid "Srate"
+msgstr "SymbolRate"
 
 msgid "Pid"
 msgstr "PID"
+
+msgid "Using channel"
+msgstr "Canali usato"
+
+msgid "none"
+msgstr ""
 
 msgid "Event options"
 msgstr "Opzioni evento"
@@ -40,6 +55,12 @@ msgstr "Tempo di attesa [s]"
 
 msgid "Time difference [min]"
 msgstr "Differenza tempo [min]"
+
+msgid "General options"
+msgstr "Opzioni generali"
+
+msgid "Prevent wakeup"
+msgstr ""
 
 msgid "Infosat channels"
 msgstr "Canali Infosat"

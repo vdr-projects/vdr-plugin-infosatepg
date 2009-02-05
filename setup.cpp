@@ -13,19 +13,41 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg (cGlobalInfosatepg *Global)
 {
     global=Global;
 
-    newChannel = global->Channel;
+    newFrequency = global->Frequency;
+    newPolarization = global->Polarization;
+    newSrate = global->Srate;
     newPid = global->Pid;
     newWaitTime = global->WaitTime;
     newEventTimeDiff= (int) (global->EventTimeDiff/60);
+    newNoWakeup=global->NoWakeup;
 
     Add (NewTitle (tr ("Scan parameter")));
-    cOsdItem *firstItem = new cMenuEditIntItem (tr ("Channel"), &newChannel,1,Channels.MaxNumber());
+    cString buffer = cString::sprintf("%s:\t%s",tr("Source"), "S19.2E"); // just for info
+    Add (new cOsdItem (buffer,osUnknown,false));
+    cOsdItem *firstItem = new cMenuEditIntItem (tr ("Frequency"), &newFrequency);
     Add (firstItem);
+    Add (new cMenuEditChrItem (tr ("Polarization"), &newPolarization,"hlvr"));
+    Add (new cMenuEditIntItem (tr ("Srate"), &newSrate));
     Add (new cMenuEditIntItem (tr ("Pid"), &newPid,1,8191));
+
+    if (global->Channel()>0)
+    {
+        buffer = cString::sprintf("-> %s:\t%i",tr("Using channel"), global->Channel());
+    }
+    else
+    {
+        buffer = cString::sprintf("-> %s:\t%s",tr("Using channel"),tr("none"));
+    }
+    Add (new cOsdItem (buffer,osUnknown,false));
+
     Add (NewTitle (tr ("Event options")));
     Add (new cMenuEditIntItem (tr ("Wait time [s]"), &newWaitTime,MIN_WAITTIME,MAX_WAITTIME));
     Add (new cMenuEditIntItem (tr ("Time difference [min]"), &newEventTimeDiff,
-                                 MIN_EVENTTIMEDIFF,MAX_EVENTTIMEDIFF));
+                               MIN_EVENTTIMEDIFF,MAX_EVENTTIMEDIFF));
+
+    Add (NewTitle (tr ("General options")));
+
+    Add (new cMenuEditBoolItem(tr("Prevent wakeup"),&newNoWakeup));
 
     if (global->InfosatChannels())
     {
@@ -46,27 +68,47 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg (cGlobalInfosatepg *Global)
 
 cOsdItem *cMenuSetupInfosatepg::NewTitle (const char *s)
 {
-    char *str;
-    asprintf (&str,"---- %s ----", s);
-    cOsdItem *tmp = new cOsdItem (str);
-    tmp->SetSelectable (false);
-    free (str);
-    return tmp;
+    cString buffer = cString::sprintf("---- %s ----", s);
+    return new cOsdItem (buffer,osUnknown,false);
 }
 
 void cMenuSetupInfosatepg::Store (void)
 {
-    bool bReprocess=false;
+    bool bResetProcessed=false;
+    bool bResetReceivedAll=false;
 
-    if (global->EventTimeDiff!= (60*newEventTimeDiff)) bReprocess=true;
+    if (global->EventTimeDiff!= (60*newEventTimeDiff)) bResetProcessed=true;
 
-    SetupStore ("Channel", global->Channel = newChannel);
+    if ((global->Frequency!=newFrequency) || (global->Polarization!=newPolarization) ||
+            (global->Srate!=newSrate) || (global->Pid!=newPid))
+    {
+        bResetReceivedAll=true;
+    }
+
+    SetupStore ("Frequency", global->Frequency = newFrequency);
+    SetupStore ("Polarization", global->Polarization = newPolarization);
+    SetupStore ("Srate", global->Srate = newSrate);
     SetupStore ("Pid", global->Pid = newPid);
+
     SetupStore ("WaitTime", global->WaitTime = newWaitTime);
     SetupStore ("EventTimeDiff", newEventTimeDiff);
+    SetupStore ("NoWakeup",global->NoWakeup=newNoWakeup);
+
     global->EventTimeDiff = 60*newEventTimeDiff;
 
-    if (bReprocess)
+    if (bResetReceivedAll)
+    {
+        if (global->FindReceiverChannel())
+        {
+            dsyslog ("infosatepg: receive files again");
+            global->ResetReceivedAll();
+        }
+        else
+        {
+            esyslog("infosatepg: found no channel to receive, check setup");
+        }
+    }
+    else if (bResetProcessed)
     {
         dsyslog ("infosatepg: reprocess files (later)");
         global->ResetProcessed();
@@ -131,10 +173,8 @@ cMenuSetupChannelMenu::cMenuSetupChannelMenu (cGlobalInfosatepg *Global, int Ind
     channel = Channels.GetByChannelID (global->GetChannelID (index));
     if (!channel) return;
 
-    char *str;
-    asprintf (&str,"---- %s ----", channel->Name());
-    Add (new cOsdItem (str,osUnknown,false));
-    free (str);
+    cString buffer = cString::sprintf("---- %s ----", channel->Name());
+    Add (new cOsdItem (buffer,osUnknown,false));
 
     Add(new cMenuEditIntItem(tr("Days in advance"),&newDays,1,EPG_DAYS));
     Add(new cMenuEditBitItem(tr("Short text"),(uint *) &newChannelUse,USE_SHORTTEXT));
@@ -151,13 +191,12 @@ void cMenuSetupChannelMenu::Store (void)
 
     if (!channel) return;
     cString ChannelID = channel->GetChannelID().ToString();
-    char *name;
-    asprintf (&name,"Channel-%s",*ChannelID);
-    if (!name) return;
+    cString name = cString::sprintf("Channel-%s",*ChannelID);
+    if (!*name) return;
     if (global->SetChannelOptions(index,newChannelUse,newDays)) bReprocess=true;
     int setupval=newChannelUse+(newDays<<16);
     SetupStore (name,setupval);
-    free (name);
+
     if (bReprocess)
     {
         dsyslog ("infosatepg: reprocess files (later)");

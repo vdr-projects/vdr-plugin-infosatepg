@@ -7,8 +7,6 @@
  */
 
 #include <stdio.h>
-#include <vdr/epg.h>
-#include <vdr/tools.h>
 #include <vdr/skins.h>
 #include <ctype.h>
 #include "process.h"
@@ -44,6 +42,7 @@ cInfosatevent::cInfosatevent()
     genre=NULL;
     original=NULL;
     extepg=NULL;
+    episode=NULL;
     year=-1;
     fsk=-1;
     category=-1;
@@ -61,41 +60,68 @@ cInfosatevent::~cInfosatevent()
     free(genre);
     free(original);
     free(extepg);
+    free(episode);
 }
 
 void cInfosatevent::SetOriginal(const char *Original)
 {
     original = strcpyrealloc(original, Original);
+    original = compactspace(original);
 }
 
 void cInfosatevent::SetGenre(const char *Genre)
 {
     genre = strcpyrealloc(genre, Genre);
+    genre = compactspace(genre);
 }
 
 void cInfosatevent::SetCountry(const char *Country)
 {
     country = strcpyrealloc(country, Country);
+    country = compactspace(country);
 }
 
 void cInfosatevent::SetAnnouncement(const char *Announcement)
 {
     announcement = strcpyrealloc(announcement, Announcement);
+    announcement = compactspace(announcement);
 }
 
 void cInfosatevent::SetTitle(const char *Title)
 {
     title = strcpyrealloc(title, Title);
+    title = compactspace(title);
+}
+
+void cInfosatevent::SetEpisode(const char *Episode)
+{
+    episode=strcpyrealloc(episode,Episode);
+    episode=compactspace(episode);
 }
 
 void cInfosatevent::SetShortText(const char *ShortText)
 {
-    shortText = strcpyrealloc(shortText, ShortText);
+    if (!ShortText) return;
+
+    char *tmpText=strcpyrealloc(shortText,ShortText);
+    if (!tmpText) return;
+    tmpText=compactspace(tmpText);
+
+    if (title)
+    {
+        if (!strcmp(title,tmpText))
+        {
+            free(tmpText);
+            return; // ShortText same as title -> ignore
+        }
+    }
+    shortText = tmpText;
 }
 
 void cInfosatevent::SetDescription(const char *Description)
 {
     description = strcpyrealloc(description, Description);
+    description = compactspace(description);
 }
 
 const char *cInfosatevent::ExtEPG(void)
@@ -144,6 +170,12 @@ const char *cInfosatevent::ExtEPG(void)
         sprintf(fmt,"FSK: %i\n",fsk);
         extepg=strcatrealloc(extepg,fmt);
     }
+    if (episode)
+    {
+        extepg=strcatrealloc(extepg,"Episode: ");
+        extepg=strcatrealloc(extepg,episode);
+        extepg=strcatrealloc(extepg,"\n");
+    }
     if (announcement)
     {
         extepg=strcatrealloc(extepg,"Rating: ");
@@ -156,9 +188,12 @@ const char *cInfosatevent::ExtEPG(void)
 
 // --- cProcessInfosatepg
 cProcessInfosatepg::cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global)
+//void cProcessInfosatepg::Action() //int Mac, cGlobalInfosatepg *Global)
 {
-    global=Global;
+//    int Mac=0;
+//    cGlobalInfosatepg *Global=NULL;
 
+    global=Global;
     FILE *f;
     const char *file = global->Infosatdata[Mac].GetFile();
     f=fopen(file,"r");
@@ -207,7 +242,6 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
     if ((!channel) || (!iEvent)) return true;
     if (iEvent->Usage()==USE_NOTHING) return true; // this should never happen!
     if (iEvent->StartTime()<time(NULL)) return true; // don't deal with old events
-
     // don't deal with events to far in the future
     if (iEvent->StartTime()>(time(NULL)+(iEvent->Days()*86400))) return true;
 
@@ -215,7 +249,7 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
     const cSchedules *Schedules = cSchedules::Schedules(SchedulesLock);
     if (!Schedules) return false; // No write lock -> try later!
     cSchedule* Schedule = (cSchedule *) Schedules->GetSchedule(channel,true);
-    if (!Schedule) return true;
+    if (!Schedule) return true; // No schedule -> do nothing (is this ok?)
 
     time_t start=0;
     cEvent *Event=NULL;
@@ -230,10 +264,12 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
         if (!Event) return true; // just bail out with ok
 
         start=iEvent->StartTime();
-        dsyslog("infosatepg: ievent %s [%s]", iEvent->Title(),ctime(&start));
+        dsyslog("infosatepg: changing event %s [%s]", iEvent->Title(),ctime(&start));
 
-        // change existing event
+        // change existing event, prevent EIT EPG to update
         Event->SetTableID(0);
+        Event->SetVersion(0xff); // is that ok?
+        Event->SetSeen(); // meaning of this?
     }
     else
     {
@@ -316,7 +352,7 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
     return true;
 }
 
-cChannel *cProcessInfosatepg::GetInfosatChannel(int frequency, int sid)
+cChannel *cProcessInfosatepg::GetVDRChannel(int frequency, int sid)
 {
     cChannel *chan;
     int source = cSource::FromString("S19.2E"); // only from astra 19.2E
@@ -348,11 +384,26 @@ bool cProcessInfosatepg::CheckOriginal(char *s,cInfosatevent *iEvent,cCharSetCon
     if (!pEOT) return false;
     if (pEOT[1]!=0) return false;
 
+    if (pEOT[-1]==')')
+    {
+        char *pTMP = strchr(&pOT[1],'(');
+        if (pTMP)
+        {
+            pOT=pTMP;
+        }
+    }
+    else
+    {
+        // just one brace
+        if (isdigit(pOT[1])) return false;
+    }
+
     *pOT=*pEOT=0;
     *pOT++;
     if (pOT[-1]==' ') pOT[-1]=0;
     // check some things
     if (!strcmp(pOT,"TM")) return false;
+    // check for (number)
     char *endp=NULL;
     long int ret =strtol(pOT,&endp,10);
     if ((ret!=0) && (*endp==0)) return false;
@@ -389,7 +440,7 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
     char *s,tag;
     int fields,index;
     size_t size;
-    time_t oldstart;
+    time_t oldstart=-1;
     bool ignore=true;
     bool abort=false;
     struct tm tm;
@@ -437,7 +488,7 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
             if (fields==7)
             {
                 // got all fields
-                chan=GetInfosatChannel(frequency,sid);
+                chan=GetVDRChannel(frequency,sid);
                 if (chan)
                 {
                     if (!global->ChannelExists(chan->GetChannelID(),&index))
@@ -464,8 +515,8 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
                             tm.tm_isdst=-1;
                             oldstart=mktime(&tm);
                             dsyslog("infosatepg: using '%s'",s);
-                            dsyslog("infosatepg: start on %02i.%02i.%04i %02i:%02i",tm.tm_mday,tm.tm_mon+1,tm.tm_year+1900,
-                                    tm.tm_hour,tm.tm_min);
+                            dsyslog("infosatepg: start on %02i.%02i.%04i %02i:%02i (%s)",tm.tm_mday,tm.tm_mon+1,tm.tm_year+1900,
+                                    tm.tm_hour,tm.tm_min,asctime(&tm));
                             ignore=false;
                             ieventnr=1;
                         }
@@ -480,13 +531,8 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
             {
                 // There was an event without long description -> add
                 if (!AddInfosatEvent(chan,ievent)) abort=true;
-                oldstart=ievent->StartTime();
                 delete ievent; // delete old event
                 ievent =NULL;
-            }
-            else
-            {
-                oldstart=(time_t) -1;
             }
             int shour,sminute;
             char *title;
@@ -513,6 +559,7 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
                     tm.tm_mday++;
                     start=mktime(&tm);
                 }
+                oldstart=start;
                 ievent->SetStartTime(start);
                 ievent->SetTitle(conv->Convert(title));
                 free(title);
@@ -626,7 +673,6 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
             strreplace(s,0x8A,'\n');
             ievent->SetDescription(conv->Convert(s));
             if (!AddInfosatEvent(chan,ievent)) abort=true;
-            oldstart=ievent->StartTime();
             delete ievent;
             ievent=NULL;
             break;
