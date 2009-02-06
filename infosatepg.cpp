@@ -26,6 +26,7 @@ cPluginInfosatepg::cPluginInfosatepg(void)
     // VDR OBJECTS TO EXIST OR PRODUCE ANY OUTPUT!
     statusMonitor=NULL;
     global=new cGlobalInfosatepg;
+    mac=EPG_FIRST_DAY_MAC;
 }
 
 cPluginInfosatepg::~cPluginInfosatepg()
@@ -119,24 +120,27 @@ void cPluginInfosatepg::Stop(void)
 void cPluginInfosatepg::Housekeeping(void)
 {
     // Perform any cleanup or other regular tasks.
-    for (int mac=EPG_FIRST_DAY_MAC; mac<=EPG_LAST_DAY_MAC; mac++)
+    if (!global->ReceivedAll()) return;
+    if (global->ProcessedAll) return;
+
+    if (!global->Infosatdata[mac].Processed)
     {
-        if (global->Infosatdata[mac].ReceivedAll() & !global->Infosatdata[mac].Processed)
-        {
-            isyslog ("infosatepg: janitor found data to be processed: day=%i month=%i",
-                     global->Infosatdata[mac].Day(),global->Infosatdata[mac].Month());
-            cProcessInfosatepg process(mac,global);
-            //process.Start();
-        }
+        isyslog ("infosatepg: janitor found data to be processed: day=%i month=%i",
+                 global->Infosatdata[mac].Day(),global->Infosatdata[mac].Month());
+        cProcessInfosatepg process(mac,global);
     }
+    mac++;
+
     int numprocessed=0;
-    for (int mac=EPG_FIRST_DAY_MAC; mac<=EPG_LAST_DAY_MAC; mac++)
+    for (int pmac=EPG_FIRST_DAY_MAC; pmac<=EPG_LAST_DAY_MAC; pmac++)
     {
-        if (global->Infosatdata[mac].Processed) numprocessed++;
+        if (global->Infosatdata[pmac].Processed) numprocessed++;
     }
-    if (numprocessed==EPG_DAYS) global->ProcessedAll=true;
-
-
+    if (numprocessed==EPG_DAYS)
+    {
+        global->ProcessedAll=true;
+        mac=EPG_FIRST_DAY_MAC;
+    }
 }
 
 void cPluginInfosatepg::MainThreadHook(void)
@@ -198,6 +202,10 @@ void cPluginInfosatepg::MainThreadHook(void)
 cString cPluginInfosatepg::Active(void)
 {
     // Returns a message string if we are not ready
+
+    // if we cannot receive, we shouldn't wait
+    if (global->Channel()==-1) return NULL;
+
     if (!global->ProcessedAll)
         return tr("Infosat plugin still working");
 
@@ -223,7 +231,9 @@ cString cPluginInfosatepg::Active(void)
 time_t cPluginInfosatepg::WakeupTime(void)
 {
     // Returns custom wakeup time for shutdown script
-    if (global->NoWakeup) return 0;
+
+    if (global->NoWakeup) return 0; // user option set -> don't wake up
+    if (global->Channel()==-1) return 0; // we cannot receive, so we don't need to wake up
     if (global->WakeupTime()==-1) global->SetWakeupTime(300); // just to be safe
     time_t Now = time(NULL);
     time_t Time = cTimer::SetTime(Now,cTimer::TimeToInt(global->WakeupTime()));
@@ -297,7 +307,7 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
         if (global->WakeupTime()!=-1)
         {
             asprintf(&output,"%s WakeupTime: %04i ", output,global->WakeupTime());
-		if (global->NoWakeup) asprintf(&output,"%s (blocked) ",output);
+            if (global->NoWakeup) asprintf(&output,"%s (blocked) ",output);
         }
         else
         {

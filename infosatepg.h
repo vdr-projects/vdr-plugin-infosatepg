@@ -20,6 +20,7 @@ private:
   // Add any member variables or functions you may need here.
   cGlobalInfosatepg *global;
   cStatusInfosatepg *statusMonitor;
+  int mac;
 public:
   cPluginInfosatepg(void);
   virtual ~cPluginInfosatepg();

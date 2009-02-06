@@ -207,9 +207,18 @@ cProcessInfosatepg::cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global)
         }
         else
         {
-            esyslog("infosatepg: failed to get writelock while parsing %s",global->Infosatdata[Mac].GetFile());
+            esyslog("infosatepg: failed to get writelock while parsing %s",file);
         }
         fclose(f);
+    }
+    else
+    {
+        if (access(file,R_OK)==-1)
+        {
+            // cannot open file -> receive it again
+            esyslog("infosatepg: cannot access %s",file);
+            global->Infosatdata[Mac].ResetReceivedAll();
+        }
     }
 }
 
@@ -273,7 +282,7 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
     }
     else
     {
-        // we are beyond the last event, so just add (if we should)
+        // we are beyond the last event, just add (if we should)
         if ((iEvent->Usage() & USE_APPEND)!=USE_APPEND) return true;
         Event = new cEvent(iEvent->EventID());
         if (!Event) return true;
@@ -430,6 +439,18 @@ bool cProcessInfosatepg::CheckAnnouncement(char *s,cInfosatevent *iEvent)
     else if ((strlen(s)>=9) && (!strncmp(s,"Highlight",9)))
     {
         iEvent->SetAnnouncement("Tipp");
+    }
+    else if ((strlen(s)>=9) && (!strncmp(s,"TAGESTIPP",9)))
+    {
+        iEvent->SetAnnouncement("Tipp");
+    }
+    else if ((strlen(s)>=10) && (!strncmp(s,"Tagestipp!",10)))
+    {
+        iEvent->SetAnnouncement("Tipp");
+    }
+    else if ((strlen(s)>=15) && (!strncmp(s,"CARTOON NETWORK",15)))
+    {
+        // just ignore this
     }
     else ret=false;
     return ret;

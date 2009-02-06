@@ -22,7 +22,7 @@ bool cGlobalInfosatdata::NeverSeen(int Day,int Month,int Packetcount)
 
 void cGlobalInfosatdata::Init(char *File,int Day,int Month,int Packetcount)
 {
-    if (access(file,R_OK)==0)
+    if (access(file,R_OK | W_OK)==0)
     {
         dsyslog("infosatepg: deleting old %s",file);
         unlink(file);
@@ -79,7 +79,17 @@ int cGlobalInfosatdata::Load(int fd)
     if (ret!=sizeof (bitfield)) return -1;
     ret=read (fd,&file,sizeof (file));
     if (ret!=sizeof (file)) return -1;
-    if (file[0]!=0) dsyslog ("infosatepg: loaded file=%s",file);
+    // check file
+    if (file[0]!=0)
+    {
+        if (access(file,R_OK | W_OK)==-1)
+        {
+            // file doesnt exist -> receive it again
+            esyslog("infosatepg: cannot access %s",file);
+            Init(file,day,month,pktcnt);
+        }
+    }
+
     return ret;
 }
 
@@ -412,6 +422,7 @@ bool cGlobalInfosatepg::FindReceiverChannel()
     cChannel *chan;
     int source = cSource::FromString("S19.2E"); // only from astra 19.2E
 
+    // Try to find a channel with the exact frequency
     for (int i=0; i<=Channels.MaxNumber(); i++)
     {
         chan = Channels.GetByNumber(i,0);
@@ -425,6 +436,38 @@ bool cGlobalInfosatepg::FindReceiverChannel()
             return true;
         }
     }
+
+    // None found? Then try to find a channel with frequency + 1
+    for (int i=0; i<=Channels.MaxNumber(); i++)
+    {
+        chan = Channels.GetByNumber(i,0);
+        if (chan)
+        {
+            if (chan->Source()!=source) continue;
+            if (chan->Srate()!=Srate) continue;
+            if (chan->Frequency()!=(Frequency+1)) continue;
+            if (chan->Polarization()!=Polarization) continue;
+            channel=i;
+            return true;
+        }
+    }
+
+    // Still none found? Then try to find a channel with frequency - 1
+    for (int i=0; i<=Channels.MaxNumber(); i++)
+    {
+        chan = Channels.GetByNumber(i,0);
+        if (chan)
+        {
+            if (chan->Source()!=source) continue;
+            if (chan->Srate()!=Srate) continue;
+            if (chan->Frequency()!=(Frequency-1)) continue;
+            if (chan->Polarization()!=Polarization) continue;
+            channel=i;
+            return true;
+        }
+    }
+
+    // No channel available
     channel=-1;
     return false;
 }
