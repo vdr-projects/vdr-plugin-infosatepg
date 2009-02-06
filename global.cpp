@@ -395,7 +395,9 @@ bool cGlobalInfosatepg::ReceivedAll(int *Day, int *Month)
         {
             // New day, but new data is ready only after wakeup-time
             time_t Now = time(NULL);
-            time_t Time = cTimer::SetTime(Now,cTimer::TimeToInt(WakeupTime()));
+            time_t Time;
+            if (WakeupTime()==-1) Time=Now+1; // No wakeup set, just wait
+            else Time = cTimer::SetTime(Now,cTimer::TimeToInt(WakeupTime()));
             if (Now>=Time)
             {
                 // new day and new data should be available
