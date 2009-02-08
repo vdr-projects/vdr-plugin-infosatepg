@@ -208,6 +208,8 @@ cString cPluginInfosatepg::Active(void)
 {
     // Returns a message string if we are not ready
 
+    if (global->NoDeferredShutdown) return NULL;
+
     // if we cannot receive, we shouldn't wait
     if (global->Channel()==-1) return NULL;
 
@@ -263,6 +265,11 @@ bool cPluginInfosatepg::SetupParse(const char *Name, const char *Value)
 {
     // Parse your own setup parameters and store their values.
     if      (!strcasecmp(Name,"Pid")) global->Pid=atoi(Value);
+    else if (!strcasecmp(Name,"Frequency")) global->Frequency=atoi(Value);
+    else if (!strcasecmp(Name,"Polarization")) global->Polarization=atoi(Value);
+    else if (!strcasecmp(Name,"Srate")) global->Srate=atoi(Value);
+    else if (!strcasecmp(Name,"NoWakeup")) global->NoWakeup=atoi(Value);
+    else if (!strcasecmp(Name,"NoDeferredShutdown")) global->NoDeferredShutdown=atoi(Value);
     else if (!strcasecmp(Name,"WaitTime")) global->WaitTime=atoi(Value);
     else if (!strcasecmp(Name,"EventTimeDiff")) global->EventTimeDiff=60*atoi(Value);
     else if (!strncasecmp(Name,"Channel",7))

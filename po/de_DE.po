@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vdr-1.6.0\n"
 "Report-Msgid-Bugs-To: <see README>\n"
-"POT-Creation-Date: 2009-02-08 00:59+0100\n"
+"POT-Creation-Date: 2009-02-08 23:25+0100\n"
 "PO-Revision-Date: 2008-05-02 16:20+0200\n"
 "Last-Translator: Jochen Dolze <infosatepg@dolze.de>\n"
 "Language-Team: <vdr@linuxtv.org>\n"
@@ -309,6 +309,9 @@ msgstr "Sonstige Optionen"
 msgid "Prevent wakeup"
 msgstr "Verhindere autom. aufwachen"
 
+msgid "Prevent deferred shutdown"
+msgstr "Verhindere verzögertes abschalten"
+
 msgid "Infosat channels"
 msgstr "Infosat Kanäle"
 
@@ -335,3 +338,9 @@ msgstr "Erstelle neue Ereignisse"
 
 msgid "Read EPG info from infosat"
 msgstr "Liest EPG infos von Infosat"
+
+#~ msgid "Button$Reset"
+#~ msgstr "Reset"
+
+#~ msgid "Button$Default"
+#~ msgstr "Default"

@@ -148,6 +148,7 @@ cGlobalInfosatepg::cGlobalInfosatepg()
     SetDirectory ("/tmp");
     ProcessedAll=false;
     NoWakeup=false;
+    NoDeferredShutdown=false;
 }
 
 cGlobalInfosatepg::~cGlobalInfosatepg()

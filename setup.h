@@ -26,6 +26,7 @@ private:
   int newSrate;
   int newPid;
   int newNoWakeup;
+  int newNoDeferredShutdown;
   int chanCurrent;
 protected:
   virtual void Store(void);
@@ -49,6 +50,7 @@ protected:
   virtual void Store(void);
 public:
   cMenuSetupChannelMenu(cGlobalInfosatepg *Global, int Index);
+  virtual eOSState ProcessKey(eKeys Key);
 };
 
 #endif

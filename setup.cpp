@@ -20,6 +20,7 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg (cGlobalInfosatepg *Global)
     newWaitTime = global->WaitTime;
     newEventTimeDiff= (int) (global->EventTimeDiff/60);
     newNoWakeup=global->NoWakeup;
+    newNoDeferredShutdown=global->NoDeferredShutdown;
 
     Add (NewTitle (tr ("Scan parameter")));
     cString buffer = cString::sprintf("%s:\t%s",tr("Source"), "S19.2E"); // just for info
@@ -48,6 +49,7 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg (cGlobalInfosatepg *Global)
     Add (NewTitle (tr ("General options")));
 
     Add (new cMenuEditBoolItem(tr("Prevent wakeup"),&newNoWakeup));
+    Add (new cMenuEditBoolItem(tr("Prevent deferred shutdown"),&newNoDeferredShutdown));
 
     if (global->InfosatChannels())
     {
@@ -64,6 +66,7 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg (cGlobalInfosatepg *Global)
             Add (new cOsdItem (buffer));
         }
     }
+    //SetHelp(tr("Button$Reset"));
 }
 
 cOsdItem *cMenuSetupInfosatepg::NewTitle (const char *s)
@@ -93,6 +96,7 @@ void cMenuSetupInfosatepg::Store (void)
     SetupStore ("WaitTime", global->WaitTime = newWaitTime);
     SetupStore ("EventTimeDiff", newEventTimeDiff);
     SetupStore ("NoWakeup",global->NoWakeup=newNoWakeup);
+    SetupStore ("NoDeferredShutdown",global->NoDeferredShutdown=newNoDeferredShutdown);
 
     global->EventTimeDiff = 60*newEventTimeDiff;
 
@@ -138,11 +142,17 @@ eOSState cMenuSetupInfosatepg::ProcessKey (eKeys Key)
 
     switch (state)
     {
+
     default:
         if (state==osUnknown)
         {
             switch (Key)
             {
+            case kRed:
+                //dsyslog("Red1 key pressed");
+                state=osContinue;
+                break;
+
             case kOk:
                 state=Edit();
                 if (state==osUnknown)
@@ -173,6 +183,8 @@ cMenuSetupChannelMenu::cMenuSetupChannelMenu (cGlobalInfosatepg *Global, int Ind
     channel = Channels.GetByChannelID (global->GetChannelID (index));
     if (!channel) return;
 
+    //SetHelp(NULL,tr("Button$Default"));
+
     cString buffer = cString::sprintf("---- %s ----", channel->Name());
     Add (new cOsdItem (buffer,osUnknown,false));
 
@@ -202,4 +214,32 @@ void cMenuSetupChannelMenu::Store (void)
         dsyslog ("infosatepg: reprocess files (later)");
         global->ResetProcessed();
     }
+}
+
+eOSState cMenuSetupChannelMenu::ProcessKey (eKeys Key)
+{
+    eOSState state = cOsdMenu::ProcessKey (Key);
+
+    switch (state)
+    {
+
+    default:
+        if (state==osUnknown)
+        {
+            switch (Key)
+            {
+            case kRed:
+                state=osContinue;
+                break;
+            case kGreen:
+                //dsyslog("Green1 key pressed");
+                state=osContinue;
+                break;
+
+            default:
+                break;
+            }
+        }
+    }
+    return state;
 }

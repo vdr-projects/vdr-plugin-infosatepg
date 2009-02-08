@@ -612,11 +612,7 @@ const char *cInfosatevent::ExtEPG(void)
 
 // --- cProcessInfosatepg
 cProcessInfosatepg::cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global)
-//void cProcessInfosatepg::Action() //int Mac, cGlobalInfosatepg *Global)
 {
-//    int Mac=0;
-//    cGlobalInfosatepg *Global=NULL;
-
     global=Global;
     FILE *f;
     const char *file = global->Infosatdata[Mac].GetFile();

@@ -134,6 +134,7 @@ public:
         isyslog("infosatepg: wakeup set to %02i:%02i", hour,minute);
     }
     bool NoWakeup;
+    bool NoDeferredShutdown;
     int WakeupTime()
     {
         return wakeuptime;
