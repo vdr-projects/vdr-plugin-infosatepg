@@ -732,7 +732,7 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
 
         // if shorttext is the same as the title -> skip short text
         // this skips additional bug reporting in epg.c
-        if (Event->ShortText() && Event->Title())
+        if (iEvent->ShortText() && iEvent->Title())
         {
             if (!strcmp(iEvent->ShortText(),iEvent->Title()))
             {
