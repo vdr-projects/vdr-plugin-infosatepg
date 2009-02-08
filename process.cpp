@@ -34,18 +34,21 @@ char *strcatrealloc(char *dest, const char *src)
 // --- cInfosatevent
 cInfosatevent::cInfosatevent()
 {
-    title = NULL;
-    shortText = NULL;
-    description = NULL;
+    title=NULL;
+    shorttext=NULL;
+    description=NULL;
     announcement=NULL;
     country=NULL;
     genre=NULL;
     original=NULL;
     extepg=NULL;
     episode=NULL;
+    category=NULL;
+    addition=NULL;
+    rating=NULL;
     year=-1;
     fsk=-1;
-    category=-1;
+    content=0;
     startTime = 0;
     duration = 0;
 }
@@ -53,14 +56,17 @@ cInfosatevent::cInfosatevent()
 cInfosatevent::~cInfosatevent()
 {
     free(title);
-    free(shortText);
+    free(shorttext);
     free(description);
     free(announcement);
     free(country);
+    free(category);
     free(genre);
     free(original);
     free(extepg);
     free(episode);
+    free(addition);
+    free(rating);
 }
 
 void cInfosatevent::SetOriginal(const char *Original)
@@ -75,6 +81,12 @@ void cInfosatevent::SetGenre(const char *Genre)
     genre = compactspace(genre);
 }
 
+void cInfosatevent::SetCategory(const char *Category)
+{
+    category = strcpyrealloc(category, Category);
+    category = compactspace(category);
+}
+
 void cInfosatevent::SetCountry(const char *Country)
 {
     country = strcpyrealloc(country, Country);
@@ -85,6 +97,18 @@ void cInfosatevent::SetAnnouncement(const char *Announcement)
 {
     announcement = strcpyrealloc(announcement, Announcement);
     announcement = compactspace(announcement);
+}
+
+void cInfosatevent::SetAddition(const char *Addition)
+{
+    addition = strcpyrealloc(addition, Addition);
+    addition = compactspace(addition);
+}
+
+void cInfosatevent::SetRating(const char *Rating)
+{
+    rating = strcpyrealloc(rating, Rating);
+    rating = compactspace(rating);
 }
 
 void cInfosatevent::SetTitle(const char *Title)
@@ -101,21 +125,8 @@ void cInfosatevent::SetEpisode(const char *Episode)
 
 void cInfosatevent::SetShortText(const char *ShortText)
 {
-    if (!ShortText) return;
-
-    char *tmpText=strcpyrealloc(shortText,ShortText);
-    if (!tmpText) return;
-    tmpText=compactspace(tmpText);
-
-    if (title)
-    {
-        if (!strcmp(title,tmpText))
-        {
-            free(tmpText);
-            return; // ShortText same as title -> ignore
-        }
-    }
-    shortText = tmpText;
+    shorttext=strcpyrealloc(shorttext,ShortText);
+    shorttext=compactspace(shorttext);
 }
 
 void cInfosatevent::SetDescription(const char *Description)
@@ -123,6 +134,388 @@ void cInfosatevent::SetDescription(const char *Description)
     description = strcpyrealloc(description, Description);
     description = compactspace(description);
 }
+
+void cInfosatevent::SetCategoryByID(int i)
+{
+    i>>=4;
+    switch (i & 0xF0)
+    {
+    case EVCONTENTMASK_MOVIEDRAMA:
+        SetCategory(tr("Content$Movie/Drama"));
+        break;
+    case EVCONTENTMASK_NEWSCURRENTAFFAIRS:
+        SetCategory(tr("Content$News/Current Affairs"));
+        break;
+    case EVCONTENTMASK_SHOW:
+        SetCategory(tr("Content$Show/Game Show"));
+        break;
+    case EVCONTENTMASK_SPORTS:
+        SetCategory(tr("Content$Sports"));
+        break;
+    case EVCONTENTMASK_CHILDRENYOUTH:
+        SetCategory(tr("Content$Children's/Youth Programmes"));
+        break;
+    case EVCONTENTMASK_MUSICBALLETDANCE:
+        SetCategory(tr("Content$Music/Ballet/Dance"));
+        break;
+    case EVCONTENTMASK_ARTSCULTURE:
+        SetCategory(tr("Content$Arts/Culture"));
+        break;
+    case EVCONTENTMASK_SOCIALPOLITICALECONOMICS:
+        SetCategory(tr("Content$Social/Political/Economics"));
+        break;
+    case EVCONTENTMASK_EDUCATIONALSCIENCE:
+        SetCategory(tr("Content$Education/Science/Factual"));
+        break;
+    case EVCONTENTMASK_LEISUREHOBBIES:
+        SetCategory(tr("Content$Leisure/Hobbies"));
+        break;
+    case EVCONTENTMASK_SPECIAL:
+        SetCategory(tr("Content$Special"));
+        break;
+    case EVCONTENTMASK_USERDEFINED:
+        SetCategory(tr("Content$Userdefined"));
+        break;
+    }
+}
+
+void cInfosatevent::SetGenreByID(int i)
+{
+    i >>= 4;
+    switch (i & 0xF0)
+    {
+    case EVCONTENTMASK_MOVIEDRAMA:
+        switch (i & 0x0F)
+        {
+        default:
+        case 0x00:
+            SetGenre(tr("Content$Movie/Drama"));
+            break;
+        case 0x01:
+            SetGenre(tr("Content$Detective/Thriller"));
+            break;
+        case 0x02:
+            SetGenre(tr("Content$Adventure/Western/War"));
+            break;
+        case 0x03:
+            SetGenre(tr("Content$Science Fiction/Fantasy/Horror"));
+            break;
+        case 0x04:
+            SetGenre(tr("Content$Comedy"));
+            break;
+        case 0x05:
+            SetGenre(tr("Content$Soap/Melodrama/Folkloric"));
+            break;
+        case 0x06:
+            SetGenre(tr("Content$Romance"));
+            break;
+        case 0x07:
+            SetGenre(tr("Content$Serious/Classical/Religious/Historical Movie/Drama"));
+            break;
+        case 0x08:
+            SetGenre(tr("Content$Adult Movie/Drama"));
+            break;
+        }
+        break;
+
+    case EVCONTENTMASK_NEWSCURRENTAFFAIRS:
+        switch (i & 0x0F)
+        {
+        default:
+        case 0x00:
+            SetGenre(tr("Content$News/Current Affairs"));
+            break;
+        case 0x01:
+            SetGenre(tr("Content$News/Weather Report"));
+            break;
+        case 0x02:
+            SetGenre(tr("Content$News Magazine"));
+            break;
+        case 0x03:
+            SetGenre(tr("Content$Documentary"));
+            break;
+        case 0x04:
+            SetGenre(tr("Content$Discussion/Inverview/Debate"));
+            break;
+        }
+        break;
+
+    case EVCONTENTMASK_SHOW:
+        switch (i & 0x0F)
+        {
+        default:
+        case 0x00:
+            SetGenre(tr("Content$Show/Game Show"));
+            break;
+        case 0x01:
+            SetGenre(tr("Content$Game Show/Quiz/Contest"));
+            break;
+        case 0x02:
+            SetGenre(tr("Content$Variety Show"));
+            break;
+        case 0x03:
+            SetGenre(tr("Content$Talk Show"));
+            break;
+        }
+        break;
+
+    case EVCONTENTMASK_SPORTS:
+        switch (i & 0x0F)
+        {
+        default:
+        case 0x00:
+            SetGenre(tr("Content$Sports"));
+            break;
+        case 0x01:
+            SetGenre(tr("Content$Special Event"));
+            break;
+        case 0x02:
+            SetGenre(tr("Content$Sport Magazine"));
+            break;
+        case 0x03:
+            SetGenre(tr("Content$Football"));
+            break;
+        case 0x04:
+            SetGenre(tr("Content$Tennis/Squash"));
+            break;
+        case 0x05:
+            SetGenre(tr("Content$Team Sports"));
+            break;
+        case 0x06:
+            SetGenre(tr("Content$Athletics"));
+            break;
+        case 0x07:
+            SetGenre(tr("Content$Motor Sport"));
+            break;
+        case 0x08:
+            SetGenre(tr("Content$Water Sport"));
+            break;
+        case 0x09:
+            SetGenre(tr("Content$Winter Sports"));
+            break;
+        case 0x0A:
+            SetGenre(tr("Content$Equestrian"));
+            break;
+        case 0x0B:
+            SetGenre(tr("Content$Martial Sports"));
+            break;
+        }
+        break;
+
+    case EVCONTENTMASK_CHILDRENYOUTH:
+        switch (i & 0x0F)
+        {
+        default:
+        case 0x00:
+            SetGenre(tr("Content$Children's/Youth Programmes"));
+            break;
+        case 0x01:
+            SetGenre(tr("Content$Pre-school Children's Programmes"));
+            break;
+        case 0x02:
+            SetGenre(tr("Content$Entertainment Programmes for 6 to 14"));
+            break;
+        case 0x03:
+            SetGenre(tr("Content$Entertainment Programmes for 10 to 16"));
+            break;
+        case 0x04:
+            SetGenre(tr("Content$Informational/Educational/School Programme"));
+            break;
+        case 0x05:
+            SetGenre(tr("Content$Cartoons/Puppets"));
+            break;
+        }
+        break;
+
+    case EVCONTENTMASK_MUSICBALLETDANCE:
+        switch (i & 0x0F)
+        {
+        default:
+        case 0x00:
+            SetGenre(tr("Content$Music/Ballet/Dance"));
+            break;
+        case 0x01:
+            SetGenre(tr("Content$Rock/Pop"));
+            break;
+        case 0x02:
+            SetGenre(tr("Content$Serious/Classical Music"));
+            break;
+        case 0x03:
+            SetGenre(tr("Content$Folk/Tradional Music"));
+            break;
+        case 0x04:
+            SetGenre(tr("Content$Jazz"));
+            break;
+        case 0x05:
+            SetGenre(tr("Content$Musical/Opera"));
+            break;
+        case 0x06:
+            SetGenre(tr("Content$Ballet"));
+            break;
+        }
+        break;
+
+    case EVCONTENTMASK_ARTSCULTURE:
+        switch (i & 0x0F)
+        {
+        default:
+        case 0x00:
+            SetGenre(tr("Content$Arts/Culture"));
+            break;
+        case 0x01:
+            SetGenre(tr("Content$Performing Arts"));
+            break;
+        case 0x02:
+            SetGenre(tr("Content$Fine Arts"));
+            break;
+        case 0x03:
+            SetGenre(tr("Content$Religion"));
+            break;
+        case 0x04:
+            SetGenre(tr("Content$Popular Culture/Traditional Arts"));
+            break;
+        case 0x05:
+            SetGenre(tr("Content$Literature"));
+            break;
+        case 0x06:
+            SetGenre(tr("Content$Film/Cinema"));
+            break;
+        case 0x07:
+            SetGenre(tr("Content$Experimental Film/Video"));
+            break;
+        case 0x08:
+            SetGenre(tr("Content$Broadcasting/Press"));
+            break;
+        case 0x09:
+            SetGenre(tr("Content$New Media"));
+            break;
+        case 0x0A:
+            SetGenre(tr("Content$Arts/Culture Magazines"));
+            break;
+        case 0x0B:
+            SetGenre(tr("Content$Fashion"));
+            break;
+        }
+        break;
+
+    case EVCONTENTMASK_SOCIALPOLITICALECONOMICS:
+        switch (i & 0x0F)
+        {
+        default:
+        case 0x00:
+            SetGenre(tr("Content$Social/Political/Economics"));
+            break;
+        case 0x01:
+            SetGenre(tr("Content$Magazines/Reports/Documentary"));
+            break;
+        case 0x02:
+            SetGenre(tr("Content$Economics/Social Advisory"));
+            break;
+        case 0x03:
+            SetGenre(tr("Content$Remarkable People"));
+            break;
+        }
+        break;
+
+    case EVCONTENTMASK_EDUCATIONALSCIENCE:
+        switch (i & 0x0F)
+        {
+        default:
+        case 0x00:
+            SetGenre(tr("Content$Education/Science/Factual"));
+            break;
+        case 0x01:
+            SetGenre(tr("Content$Nature/Animals/Environment"));
+            break;
+        case 0x02:
+            SetGenre(tr("Content$Technology/Natural Sciences"));
+            break;
+        case 0x03:
+            SetGenre(tr("Content$Medicine/Physiology/Psychology"));
+            break;
+        case 0x04:
+            SetGenre(tr("Content$Foreign Countries/Expeditions"));
+            break;
+        case 0x05:
+            SetGenre(tr("Content$Social/Spiritual Sciences"));
+            break;
+        case 0x06:
+            SetGenre(tr("Content$Further Education"));
+            break;
+        case 0x07:
+            SetGenre(tr("Content$Languages"));
+            break;
+        }
+        break;
+
+    case EVCONTENTMASK_LEISUREHOBBIES:
+        switch (i & 0x0F)
+        {
+        default:
+        case 0x00:
+            SetGenre(tr("Content$Leisure/Hobbies"));
+            break;
+        case 0x01:
+            SetGenre(tr("Content$Tourism/Travel"));
+            break;
+        case 0x02:
+            SetGenre(tr("Content$Handicraft"));
+            break;
+        case 0x03:
+            SetGenre(tr("Content$Motoring"));
+            break;
+        case 0x04:
+            SetGenre(tr("Content$Fitness & Health"));
+            break;
+        case 0x05:
+            SetGenre(tr("Content$Cooking"));
+            break;
+        case 0x06:
+            SetGenre(tr("Content$Advertisement/Shopping"));
+            break;
+        case 0x07:
+            SetGenre(tr("Content$Gardening"));
+            break;
+        }
+        break;
+
+    case EVCONTENTMASK_SPECIAL:
+        switch (i & 0x0F)
+        {
+        case 0x00:
+            SetGenre(tr("Content$Original Language"));
+            break;
+        case 0x01:
+            SetGenre(tr("Content$Black & White"));
+            break;
+        case 0x02:
+            SetGenre(tr("Content$Unpublished"));
+            break;
+        case 0x03:
+            SetGenre(tr("Content$Live Broadcast"));
+            break;
+        default:
+            SetGenre(tr("Content$Special Characteristics"));
+            break;
+        }
+        break;
+
+    case EVCONTENTMASK_USERDEFINED:
+        switch (i & 0x0F)
+        {
+        case 0x00:
+            SetGenre(tr("Content$Drama")); // UK Freeview
+            break;
+        default:
+            break;
+        }
+        break;
+
+    default:
+        break;
+    }
+}
+
 
 const char *cInfosatevent::ExtEPG(void)
 {
@@ -135,12 +528,19 @@ const char *cInfosatevent::ExtEPG(void)
         extepg=NULL;
     }
 
-    extepg=strcatrealloc(extepg,"\n\n");
+    extepg=strcatrealloc(extepg,"\n");
 
-    if (category!=-1)
+    if (content)
     {
-        sprintf(fmt,"Category: %i\n",category);
-        extepg=strcatrealloc(extepg,fmt);
+        SetCategoryByID(content);
+        SetGenreByID(content);
+    }
+
+    if (category)
+    {
+        extepg=strcatrealloc(extepg,"Category: ");
+        extepg=strcatrealloc(extepg,category);
+        extepg=strcatrealloc(extepg,"\n");
     }
     if (genre)
     {
@@ -176,13 +576,37 @@ const char *cInfosatevent::ExtEPG(void)
         extepg=strcatrealloc(extepg,episode);
         extepg=strcatrealloc(extepg,"\n");
     }
-    if (announcement)
+    if (rating)
     {
         extepg=strcatrealloc(extepg,"Rating: ");
-        extepg=strcatrealloc(extepg,announcement);
+        extepg=strcatrealloc(extepg,rating);
         extepg=strcatrealloc(extepg,"\n");
     }
 
+
+    if (announcement)
+    {
+        extepg=strcatrealloc(extepg,"Announcement: ");
+        extepg=strcatrealloc(extepg,announcement);
+        extepg=strcatrealloc(extepg,"\n");
+    }
+    if (addition)
+    {
+        extepg=strcatrealloc(extepg,"Addition: ");
+        extepg=strcatrealloc(extepg,addition);
+        extepg=strcatrealloc(extepg,"\n");
+    }
+
+    int len=strlen(extepg);
+    if (len<=1)
+    {
+        free(extepg);
+        extepg=NULL;
+    }
+    else
+    {
+        extepg[len-1]=0; // cut of last linefeed
+    }
     return (const char*) extepg;
 }
 
@@ -296,6 +720,25 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
 
     if ((iEvent->Usage() & USE_SHORTTEXT) == USE_SHORTTEXT)
     {
+        if (!iEvent->ShortText())
+        {
+            // no short text
+            if (iEvent->Original())
+            {
+                // use original if it exists
+                iEvent->SetShortText(iEvent->Original());
+            }
+        }
+
+        // if shorttext is the same as the title -> skip short text
+        // this skips additional bug reporting in epg.c
+        if (Event->ShortText() && Event->Title())
+        {
+            if (!strcmp(iEvent->ShortText(),iEvent->Title()))
+            {
+                iEvent->SetShortText(NULL);
+            }
+        }
         Event->SetShortText(iEvent->ShortText());
     }
 
@@ -384,10 +827,67 @@ cChannel *cProcessInfosatepg::GetVDRChannel(int frequency, int sid)
     return NULL;
 }
 
-bool cProcessInfosatepg::CheckOriginal(char *s,cInfosatevent *iEvent,cCharSetConv *conv)
+bool cProcessInfosatepg::CheckOriginal_and_Episode(char **s,cInfosatevent *iEvent,cCharSetConv *conv)
 {
+    if (!strcmp(*s,"Blockbuster"))
+    {
+        iEvent->SetRating("Tipp");
+        (*s)+=11;
+        return false;
+    }
+
+    if (!strcmp(*s,"LIVE"))
+    {
+        iEvent->SetAnnouncement("LIVE");
+        (*s)+=4;
+        return false;
+    }
+
+    if (!strcmp(*s,"SAT.1-REIHE"))
+    {
+        // just ignore
+        (*s)+=11;
+        return false;
+    }
+    if (!strcmp(*s,"NIGHT ACTION"))
+    {
+        iEvent->SetAnnouncement("Action");
+        (*s)+=12;
+        return false;
+    }
+    if (!strcmp(*s,"FILME DER FILMEMACHER"))
+    {
+        iEvent->SetAnnouncement("Filme der Filmemacher");
+        (*s)+=21;
+        return false;
+    }
+    if (!strcmp(*s,"DIE BESTEN FILME ALLER ZEITEN"))
+    {
+        iEvent->SetRating("Tipp");
+        (*s)+=29;
+        return false;
+    }
+
+    if (!strncmp(*s,"Folge ",6))
+    {
+        (*s)+=6;
+        char *episode=*s;
+        // ok, overread Numbers and /
+        while (isdigit(**s) | **s=='/') (*s)++;
+        if (**s==0)
+        {
+            iEvent->SetEpisode(episode);
+            return false;
+        }
+        (**s)=0;
+        iEvent->SetEpisode(episode);
+        (*s)++; // advance to subtitle
+        if (**s=='-') (*s)++; // overread hyphen, if it exists
+        while (**s==' ') (*s)++; // overread spaces
+    }
+
     char *pOT,*pEOT;
-    pOT=strchr(s,'(');
+    pOT=strchr(*s,'(');
     if (!pOT) return false;
     pEOT=strrchr(pOT,')');
     if (!pEOT) return false;
@@ -438,17 +938,21 @@ bool cProcessInfosatepg::CheckAnnouncement(char *s,cInfosatevent *iEvent)
     }
     else if ((strlen(s)>=9) && (!strncmp(s,"Highlight",9)))
     {
-        iEvent->SetAnnouncement("Tipp");
+        iEvent->SetRating("Tipp");
     }
     else if ((strlen(s)>=9) && (!strncmp(s,"TAGESTIPP",9)))
     {
-        iEvent->SetAnnouncement("Tipp");
+        iEvent->SetRating("Tipp");
     }
     else if ((strlen(s)>=10) && (!strncmp(s,"Tagestipp!",10)))
     {
-        iEvent->SetAnnouncement("Tipp");
+        iEvent->SetRating("Tipp");
     }
     else if ((strlen(s)>=15) && (!strncmp(s,"CARTOON NETWORK",15)))
+    {
+        // just ignore this
+    }
+    else if ((strlen(s)>=11) && (!strncmp(s,"SAT.1-SERIE",11)))
     {
         // just ignore this
     }
@@ -483,12 +987,12 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
         {
             if (ievent)
             {
-                int category,fsk;
-                fields=sscanf(s,"%d %d",&category,&fsk);
-                if (fields==1) ievent->SetCategory(category);
+                int content_descr,fsk;
+                fields=sscanf(s,"%x %d",&content_descr,&fsk);
+                if (fields==1) ievent->SetContentDescriptor(content_descr);
                 if (fields==2)
                 {
-                    ievent->SetCategory(category);
+                    ievent->SetContentDescriptor(content_descr);
                     ievent->SetFSK(fsk);
                 }
             }
@@ -605,11 +1109,7 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
             if (p8A)
             {
                 *p8A=0;
-                // check for special announcements:
-                // Erstausstrahlung
-                // Deutschland-Premiere
-                // Free-TV-Premiere
-                // Highlight
+                // check for special announcements
                 pSA=strrchr(s,',');
                 if (pSA)
                 {
@@ -618,14 +1118,14 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
                         // announcement was added to short description
                         *pSA=0;
                     }
-                    CheckOriginal(s,ievent,conv);
+                    CheckOriginal_and_Episode(&s,ievent,conv);
                     ievent->SetShortText(conv->Convert(s));
                 }
                 else
                 {
                     if (!CheckAnnouncement(s,ievent))
                     {
-                        CheckOriginal(s,ievent,conv);
+                        CheckOriginal_and_Episode(&s,ievent,conv);
                         ievent->SetShortText(conv->Convert(s));
                     }
                 }
@@ -636,7 +1136,7 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
             if (pDU)
             {
                 *pDU=0;
-                // with genre
+                // with additional info
                 if (CheckAnnouncement(s,ievent))
                 {
                     char *tp8A;
@@ -665,7 +1165,7 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
                             pSP++;
                             // country and year (check!!)
                             int year = atoi(pSP);
-                            if (year!=0) ievent->SetYear(year);
+                            if (year>1900) ievent->SetYear(year);
                             ievent->SetCountry(conv->Convert(pCY));
                         }
                         else
@@ -675,7 +1175,15 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
                         }
                     }
                 }
-                ievent->SetGenre(conv->Convert(s));
+                year=atoi(s);
+                if (year>1900)
+                {
+                    ievent->SetYear(year);
+                }
+                else
+                {
+                    ievent->SetAddition(conv->Convert(s));
+                }
                 s=++pDU;
             }
             int len;

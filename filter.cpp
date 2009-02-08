@@ -102,7 +102,7 @@ void cFilterInfosatepg::Process(u_short Pid, u_char Tid, const u_char *Data, int
     // Check IP checksum
     if (IPChecksum(ip_hdr)!=0)
     {
-        dsyslog("infosatepg: ip checksum error");
+        esyslog("infosatepg: ip checksum error");
         return;
     }
 
@@ -112,7 +112,7 @@ void cFilterInfosatepg::Process(u_short Pid, u_char Tid, const u_char *Data, int
     // Check UDP checksum
     if (UDPChecksum(ip_hdr,udp_hdr)!=0)
     {
-        dsyslog("infosatepg: udp checksum error");
+        esyslog("infosatepg: udp checksum error");
         return;
     }
 

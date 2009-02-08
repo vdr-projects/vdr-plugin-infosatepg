@@ -26,6 +26,7 @@ cPluginInfosatepg::cPluginInfosatepg(void)
     // VDR OBJECTS TO EXIST OR PRODUCE ANY OUTPUT!
     statusMonitor=NULL;
     global=new cGlobalInfosatepg;
+    numprocessed=0;
     mac=EPG_FIRST_DAY_MAC;
 }
 
@@ -120,34 +121,38 @@ void cPluginInfosatepg::Stop(void)
 void cPluginInfosatepg::Housekeeping(void)
 {
     // Perform any cleanup or other regular tasks.
-    if (!global->ReceivedAll()) return;
-    if (global->ProcessedAll) return;
-
-    if (!global->Infosatdata[mac].Processed)
-    {
-        isyslog ("infosatepg: janitor found data to be processed: day=%i month=%i",
-                 global->Infosatdata[mac].Day(),global->Infosatdata[mac].Month());
-        cProcessInfosatepg process(mac,global);
-    }
-    mac++;
-
-    int numprocessed=0;
-    for (int pmac=EPG_FIRST_DAY_MAC; pmac<=EPG_LAST_DAY_MAC; pmac++)
-    {
-        if (global->Infosatdata[pmac].Processed) numprocessed++;
-    }
-    if (numprocessed==EPG_DAYS)
-    {
-        global->ProcessedAll=true;
-        mac=EPG_FIRST_DAY_MAC;
-    }
 }
 
 void cPluginInfosatepg::MainThreadHook(void)
 {
     // Perform actions in the context of the main program thread.
-    if ((!global->WaitOk()) || (global->Switched()) || (global->ReceivedAll()) ||
-            (global->Channel()==-1)) return;
+    if (!global->WaitOk()) return;
+    if (global->ReceivedAll() && !global->ProcessedAll)
+    {
+        if (!global->Infosatdata[mac].Processed)
+        {
+            isyslog ("infosatepg: found data to be processed: day=%i month=%i",
+                     global->Infosatdata[mac].Day(),global->Infosatdata[mac].Month());
+            cProcessInfosatepg process(mac,global);
+            global->SetWaitTimer();
+        }
+        if (global->Infosatdata[mac].Processed)
+        {
+            numprocessed++;
+            mac++;
+        }
+        if (numprocessed==EPG_DAYS)
+        {
+            global->ProcessedAll=true;
+        }
+    }
+    else
+    {
+        numprocessed=0;
+        mac=EPG_FIRST_DAY_MAC;
+    }
+
+    if ((global->Switched()) || (global->ReceivedAll()) || (global->Channel()==-1)) return;
 
     cChannel *chan=Channels.GetByNumber(global->Channel());
     if (!chan) return;
@@ -283,8 +288,12 @@ const char **cPluginInfosatepg::SVDRPHelpPages(void)
     // Returns help text for SVDRP
     static const char *HelpPages[] =
     {
-        "STATE\n"
+        "STAT\n"
         "    Return actual state of the plugin",
+        "RESR\n"
+        "    Reset received all",
+        "REPR\n"
+        "    Reprocess again",
         NULL
     };
     return HelpPages;
@@ -294,7 +303,17 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
 {
     // Process SVDRP commands
     char *output=NULL;
-    if (!strcasecmp(Command,"STATE"))
+    if (!strcasecmp(Command,"RESR"))
+    {
+        global->ResetReceivedAll();
+        asprintf(&output,"OK\n");
+    }
+    if (!strcasecmp(Command,"REPR"))
+    {
+        global->ResetProcessed();
+        asprintf(&output,"OK\n");
+    }
+    if (!strcasecmp(Command,"STAT"))
     {
         int day,month;
         asprintf(&output,"InfosatEPG state:\n");

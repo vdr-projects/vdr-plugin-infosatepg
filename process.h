@@ -14,23 +14,39 @@
 // --- cInfosatevent
 class cInfosatevent
 {
+#define EVCONTENTMASK_MOVIEDRAMA               0x10
+#define EVCONTENTMASK_NEWSCURRENTAFFAIRS       0x20
+#define EVCONTENTMASK_SHOW                     0x30
+#define EVCONTENTMASK_SPORTS                   0x40
+#define EVCONTENTMASK_CHILDRENYOUTH            0x50
+#define EVCONTENTMASK_MUSICBALLETDANCE         0x60
+#define EVCONTENTMASK_ARTSCULTURE              0x70
+#define EVCONTENTMASK_SOCIALPOLITICALECONOMICS 0x80
+#define EVCONTENTMASK_EDUCATIONALSCIENCE       0x90
+#define EVCONTENTMASK_LEISUREHOBBIES           0xA0
+#define EVCONTENTMASK_SPECIAL                  0xB0
+#define EVCONTENTMASK_USERDEFINED              0xF0
+
 private:
   int duration;
   time_t startTime;
   char *title;
-  char *shortText;
+  char *shorttext;
   char *description;
   char *announcement;
   char *country;
   char *genre;
   char *original;
   char *episode;
-  int category;
+  char *category;
+  char *extepg;
+  char *addition;
+  char *rating;
+  int content;
   int fsk;
   int year;
   int usage;
   int days;
-  char *extepg;
   tEventID eventID;
 public:
   cInfosatevent();
@@ -44,25 +60,33 @@ public:
   void SetEventDays(int Days) { days=Days; }
   void SetYear(int Year) { year=Year; }
   void SetEventID(tEventID EventID) { eventID=EventID; }
-  void SetCategory(int Category) { category=Category; }
+  void SetContentDescriptor(int Content) { content=Content; }
   void SetFSK(int FSK) { fsk=FSK; }
+  void SetRating(const char *Rating);
   void SetAnnouncement(const char *Announcement);
   void SetCountry(const char *Country);
+  void SetCategory(const char *Category);
+  void SetCategoryByID(int i);
   void SetGenre(const char *Genre);
+  void SetGenreByID(int i);
   void SetOriginal(const char *Original);
   void SetEpisode(const char *Episode);
+  void SetAddition(const char *Addition);
   const char *Description(void) const { return description; }
   const char *Title(void) const { return title; }
-  const char *ShortText(void) const { return shortText; }
+  const char *ShortText(void) const { return shorttext; }
   const char *Announcement(void) const { return announcement; }
+  const char *Category(void) const { return category; }
   const char *Genre(void) const { return genre; }
   const char *Country(void) const { return country; }
   const char *Original(void) const { return original; }
   const char *Episode(void) const { return episode; }
+  const char *Addition(void) const { return addition; }
+  const char *Rating(void) const { return rating; }
+  int Content(void) const { return content; }
   int Year(void) const { return year; }
   int Duration(void) const { return duration; }
   int FSK(void) const { return fsk; }
-  int Category(void) const { return category; }
   time_t StartTime(void) const { return startTime; }
   int Usage() { return usage; }
   int Days() { return days; }
@@ -76,7 +100,7 @@ class cProcessInfosatepg //: public cThread
 private:
   cGlobalInfosatepg *global;
   bool AddInfosatEvent(cChannel *channel, cInfosatevent *iEvent);
-  bool CheckOriginal(char *s,cInfosatevent *iEvent,cCharSetConv *conv);
+  bool CheckOriginal_and_Episode(char **s,cInfosatevent *iEvent,cCharSetConv *conv);
   bool CheckAnnouncement(char *s,cInfosatevent *iEvent);
   bool ParseInfosatepg(FILE *f,int *firststarttime);
   cChannel *GetVDRChannel(int frequency, int sid);
