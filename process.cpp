@@ -961,6 +961,19 @@ bool cProcessInfosatepg::CheckAnnouncement(char *s,cInfosatevent *iEvent)
     {
         // just ignore this
     }
+
+    else if ((strlen(s)>=16) && (!strncmp(s,"kabel eins Trick",16)))
+    {
+        // just ignore this
+    }
+    else if ((strlen(s)>=5) && (!strncmp(s,"JETIX",5)))
+    {
+        // just ignore this
+    }
+    else if ((strlen(s)>=11) && (!strncmp(s,"DISNEY TIME",11)))
+    {
+        // just ignore this
+    }
     else ret=false;
     return ret;
 }

@@ -19,253 +19,253 @@ msgid "Infosat plugin still working"
 msgstr "Infosat Plugin ist noch nicht fertig"
 
 msgid "Content$Movie/Drama"
-msgstr ""
+msgstr "Spielfilm/Drama"
 
 msgid "Content$News/Current Affairs"
-msgstr ""
+msgstr "Nachrichten"
 
 msgid "Content$Show/Game Show"
-msgstr ""
+msgstr "Show/Gameshow"
 
 msgid "Content$Sports"
-msgstr ""
+msgstr "Sport"
 
 msgid "Content$Children's/Youth Programmes"
-msgstr ""
+msgstr "Kinder/Jugendprogramm"
 
 msgid "Content$Music/Ballet/Dance"
-msgstr ""
+msgstr "Musik/Ballet/Tanz"
 
 msgid "Content$Arts/Culture"
-msgstr ""
+msgstr "Kunst/Kultur"
 
 msgid "Content$Social/Political/Economics"
-msgstr ""
+msgstr "Soziales/Politikereignisse/Wirtschaft"
 
 msgid "Content$Education/Science/Factual"
-msgstr ""
+msgstr "Dokumentation/Magazin"
 
 msgid "Content$Leisure/Hobbies"
-msgstr ""
+msgstr "Reise/Freizeit"
 
 msgid "Content$Special"
-msgstr ""
+msgstr "Spezial"
 
 msgid "Content$Userdefined"
-msgstr ""
+msgstr "benutzerdefiniert"
 
 msgid "Content$Detective/Thriller"
-msgstr ""
+msgstr "Kriminalfilm/Thriller"
 
 msgid "Content$Adventure/Western/War"
-msgstr ""
+msgstr "Abenteuerfilm/Western/Kriegsfilm"
 
 msgid "Content$Science Fiction/Fantasy/Horror"
-msgstr ""
+msgstr "Science-Fiction/Fantasy/Horror"
 
 msgid "Content$Comedy"
-msgstr ""
+msgstr "Comedy"
 
 msgid "Content$Soap/Melodrama/Folkloric"
-msgstr ""
+msgstr "Soap/Melodram/Folklore"
 
 msgid "Content$Romance"
-msgstr ""
+msgstr "Romantik"
 
 msgid "Content$Serious/Classical/Religious/Historical Movie/Drama"
-msgstr ""
+msgstr "Anspuchsvoller/klassischer/religiöser/historischer Spielfilm/Drama"
 
 msgid "Content$Adult Movie/Drama"
-msgstr ""
+msgstr "XXX Spielfilm/Drama"
 
 msgid "Content$News/Weather Report"
-msgstr ""
+msgstr "Nachrichten/Wetter"
 
 msgid "Content$News Magazine"
-msgstr ""
+msgstr "Nachrichtenmagazin"
 
 msgid "Content$Documentary"
-msgstr ""
+msgstr "Dokumentation"
 
 msgid "Content$Discussion/Inverview/Debate"
-msgstr ""
+msgstr "Diskussion/Interview/Debatte"
 
 msgid "Content$Game Show/Quiz/Contest"
-msgstr ""
+msgstr "Show/Gameshow"
 
 msgid "Content$Variety Show"
-msgstr ""
+msgstr "Verietee"
 
 msgid "Content$Talk Show"
-msgstr ""
+msgstr "Talkshow"
 
 msgid "Content$Special Event"
-msgstr ""
+msgstr "Besonderes Ereignis"
 
 msgid "Content$Sport Magazine"
-msgstr ""
+msgstr "Sportmagazin"
 
 msgid "Content$Football"
-msgstr ""
+msgstr "Fußball"
 
 msgid "Content$Tennis/Squash"
-msgstr ""
+msgstr "Tennis/Sqash"
 
 msgid "Content$Team Sports"
-msgstr ""
+msgstr "Mannschaftssport"
 
 msgid "Content$Athletics"
-msgstr ""
+msgstr "Leichtathletik"
 
 msgid "Content$Motor Sport"
-msgstr ""
+msgstr "Motorsport"
 
 msgid "Content$Water Sport"
-msgstr ""
+msgstr "Wassersport"
 
 msgid "Content$Winter Sports"
-msgstr ""
+msgstr "Wintersport"
 
 msgid "Content$Equestrian"
-msgstr ""
+msgstr "Reitsport"
 
 msgid "Content$Martial Sports"
-msgstr ""
+msgstr "Kampfsport"
 
 msgid "Content$Pre-school Children's Programmes"
-msgstr ""
+msgstr "Programm für Vorschulkinder"
 
 msgid "Content$Entertainment Programmes for 6 to 14"
-msgstr ""
+msgstr "Unterhaltungsprogramm für 6 bis 14-Jährige"
 
 msgid "Content$Entertainment Programmes for 10 to 16"
-msgstr ""
+msgstr "Unterhaltungsprogramm für 10 bis 16-Jährige"
 
 msgid "Content$Informational/Educational/School Programme"
-msgstr ""
+msgstr "Informations- und Bildungsprogramm"
 
 msgid "Content$Cartoons/Puppets"
-msgstr ""
+msgstr "Trickfilm"
 
 msgid "Content$Rock/Pop"
-msgstr ""
+msgstr "Rock/Pop"
 
 msgid "Content$Serious/Classical Music"
-msgstr ""
+msgstr "Klassische Musik"
 
 msgid "Content$Folk/Tradional Music"
-msgstr ""
+msgstr "Volksmusik/traditionelle Musik"
 
 msgid "Content$Jazz"
-msgstr ""
+msgstr "Jazz"
 
 msgid "Content$Musical/Opera"
-msgstr ""
+msgstr "Musical/Oper"
 
 msgid "Content$Ballet"
-msgstr ""
+msgstr "Ballett"
 
 msgid "Content$Performing Arts"
-msgstr ""
+msgstr "Darstellende Künste"
 
 msgid "Content$Fine Arts"
-msgstr ""
+msgstr "Kunstwissenschaft"
 
 msgid "Content$Religion"
-msgstr ""
+msgstr "Religion"
 
 msgid "Content$Popular Culture/Traditional Arts"
-msgstr ""
+msgstr "Volkskunst"
 
 msgid "Content$Literature"
-msgstr ""
+msgstr "Literatur"
 
 msgid "Content$Film/Cinema"
-msgstr ""
+msgstr "Film/Kino"
 
 msgid "Content$Experimental Film/Video"
-msgstr ""
+msgstr "Experimentalfilm/Video"
 
 msgid "Content$Broadcasting/Press"
-msgstr ""
+msgstr "Rundfunk/Presse"
 
 msgid "Content$New Media"
-msgstr ""
+msgstr "Neue Medien"
 
 msgid "Content$Arts/Culture Magazines"
-msgstr ""
+msgstr "Kunstmagazin/Kulturmagazin"
 
 msgid "Content$Fashion"
-msgstr ""
+msgstr "Mode"
 
 msgid "Content$Magazines/Reports/Documentary"
-msgstr ""
+msgstr "Magazin/Report/Dokumentation"
 
 msgid "Content$Economics/Social Advisory"
-msgstr ""
+msgstr "Wirtschaft/Soziales"
 
 msgid "Content$Remarkable People"
-msgstr ""
+msgstr "Persönlichkeiten"
 
 msgid "Content$Nature/Animals/Environment"
-msgstr ""
+msgstr "Natur/Tiere/Umwelt"
 
 msgid "Content$Technology/Natural Sciences"
-msgstr ""
+msgstr "Technik/Naturwissenschaft"
 
 msgid "Content$Medicine/Physiology/Psychology"
-msgstr ""
+msgstr "Medizin/Physiologie/Psychologie"
 
 msgid "Content$Foreign Countries/Expeditions"
-msgstr ""
+msgstr "Ausland/Forschungsreisen"
 
 msgid "Content$Social/Spiritual Sciences"
-msgstr ""
+msgstr "Sozial- und Geisteswissenschaften"
 
 msgid "Content$Further Education"
-msgstr ""
+msgstr "Weiterbildung"
 
 msgid "Content$Languages"
-msgstr ""
+msgstr "Sprachen"
 
 msgid "Content$Tourism/Travel"
-msgstr ""
+msgstr "Tourismus/Reise"
 
 msgid "Content$Handicraft"
-msgstr ""
+msgstr "Handwerk"
 
 msgid "Content$Motoring"
-msgstr ""
+msgstr "Kraftfahrzeuge"
 
 msgid "Content$Fitness & Health"
-msgstr ""
+msgstr "Fitness und Gesundheit"
 
 msgid "Content$Cooking"
-msgstr ""
+msgstr "Kochen"
 
 msgid "Content$Advertisement/Shopping"
-msgstr ""
+msgstr "Werbung/Einkauf"
 
 msgid "Content$Gardening"
-msgstr ""
+msgstr "Garten"
 
 msgid "Content$Original Language"
-msgstr ""
+msgstr "Originalton"
 
 msgid "Content$Black & White"
-msgstr ""
+msgstr "Schwarz & Weiss"
 
 msgid "Content$Unpublished"
-msgstr ""
+msgstr "Unveröffentlicht"
 
 msgid "Content$Live Broadcast"
-msgstr ""
+msgstr "Livesendung"
 
 msgid "Content$Special Characteristics"
-msgstr ""
+msgstr "spezielle Eigenschaften"
 
 msgid "Content$Drama"
-msgstr ""
+msgstr "Drama"
 
 msgid "Infosat channellist available"
 msgstr "Infosat Kanalliste verfügbar"
@@ -339,8 +339,3 @@ msgstr "Erstelle neue Ereignisse"
 msgid "Read EPG info from infosat"
 msgstr "Liest EPG infos von Infosat"
 
-#~ msgid "Button$Reset"
-#~ msgstr "Reset"
-
-#~ msgid "Button$Default"
-#~ msgstr "Default"

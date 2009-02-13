@@ -55,6 +55,8 @@ int cGlobalInfosatdata::Save(int fd)
     if (ret!=sizeof (month)) return -1;
     ret=write (fd,&pktcnt,sizeof (pktcnt));
     if (ret!=sizeof (pktcnt)) return -1;
+    ret=write (fd,&missed,sizeof (missed));
+    if (ret!=sizeof (missed)) return -1;
     ret=write (fd,&bitfield,sizeof (bitfield));
     if (ret!=sizeof (bitfield)) return -1;
     ret=write (fd,&file,sizeof (file));
@@ -77,6 +79,8 @@ int cGlobalInfosatdata::Load(int fd)
     if (ret!=sizeof (month)) return -1;
     ret=read (fd,&pktcnt,sizeof (pktcnt));
     if (ret!=sizeof (pktcnt)) return -1;
+    ret=read (fd,&missed,sizeof (missed));
+    if (ret!=sizeof (missed)) return -1;
     ret=read (fd,&bitfield,sizeof (bitfield));
     if (ret!=sizeof (bitfield)) return -1;
     ret=read (fd,&file,sizeof (file));

@@ -313,7 +313,7 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
         numprocessed=0;
         pmac=EPG_FIRST_DAY_MAC;
 
-        asprintf(&output,"OK\n");
+        asprintf(&output,"Restarted receiver\n");
     }
     if (!strcasecmp(Command,"REPR"))
     {
@@ -321,7 +321,12 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
         numprocessed=0;
         pmac=EPG_FIRST_DAY_MAC;
 
-        asprintf(&output,"OK\n");
+        asprintf(&output,"Reprocess\n");
+    }
+    if (!strcasecmp(Command,"SAVE"))
+    {
+        global->Save();
+        asprintf(&output,"InfosatEPG state saved\n");
     }
     if (!strcasecmp(Command,"STAT"))
     {
