@@ -92,6 +92,7 @@ void cFilterInfosatepg::Process(u_short Pid, u_char Tid, const u_char *Data, int
     if (!global->CheckMAC(&eth_hdr)) return;
 
     int mac = eth_hdr.h_dest[5];
+    global->ActualMac=mac;
 
     struct iphdr *ip_hdr = (iphdr *) &Data[SECT_IP_HDR_START];
     struct udphdr *udp_hdr = (udphdr *) &Data[SECT_UDP_HDR_START];
@@ -120,21 +121,32 @@ void cFilterInfosatepg::Process(u_short Pid, u_char Tid, const u_char *Data, int
 
     if (ntohs(ishdr->technisatId)!=0x0001) return;
 
+    int pktnr = ntohs(ishdr->pktnr);
+    int pktcnt = ntohs(ishdr->pktcnt);
+
     const u_char *infosatdata = &Data[SECT_IS_DATA_START];
     int len = Length - SECT_IS_DATA_START-4;
 
     char file[1024];
     snprintf(file,sizeof(file),"%s/infosatepg%02i%02i_%03i.dat",global->Directory(),ishdr->day,ishdr->month,
-             ntohs(ishdr->pktcnt));
+             pktcnt);
 
-    if (global->Infosatdata[mac].NeverSeen(ishdr->day,ishdr->month,ntohs(ishdr->pktcnt)))
+    if (global->Infosatdata[mac].NeverSeen(ishdr->day,ishdr->month,pktcnt))
     {
         // never seen such a packet -> init structure
-        global->Infosatdata[mac].Init(file,ishdr->day,ishdr->month,ntohs(ishdr->pktcnt));
+        global->Infosatdata[mac].Init(file,ishdr->day,ishdr->month,pktcnt);
     }
 
+    // Check if we missed a packet
+    global->Infosatdata[mac].CheckMissed(pktnr);
+
     // Check if we already have this packet
-    if (global->Infosatdata[mac].GetBit(ntohs(ishdr->pktnr))) return;
+    if (global->Infosatdata[mac].GetBit(pktnr))
+    {
+        global->Infosatdata[mac].SetLastPkt(pktnr);
+        return;
+    }
+
 
 #ifdef VDRDEBUG
     dsyslog("infosatepg: mac=%02x-%02x-%02x-%02x-%02x-%02x",eth_hdr.h_dest[0],eth_hdr.h_dest[1],
@@ -142,7 +154,7 @@ void cFilterInfosatepg::Process(u_short Pid, u_char Tid, const u_char *Data, int
 
     dsyslog("infosatepg: tid=%04i tbl=%04i stbl=%04i day=%02i month=%02i pktnr=%03i pktcnt=%03i len=%i",
             ntohs(ishdr->technisatId),ishdr->tableId,ishdr->tablesubId,ishdr->day,
-            ishdr->month, ntohs(ishdr->pktnr), ntohs(ishdr->pktcnt), len);
+            ishdr->month, pktnr, pktcnt, len);
 
     dsyslog("infosatepg: save to %s", file);
 #endif
@@ -156,7 +168,7 @@ void cFilterInfosatepg::Process(u_short Pid, u_char Tid, const u_char *Data, int
         }
         return;
     }
-    off_t offset = (off_t) (ntohs(ishdr->pktnr)*1400);
+    off_t offset = (off_t) (pktnr*1400);
     if (lseek(f,offset,SEEK_SET)!=(off_t) -1)
     {
 #ifdef VDRDEBUG
@@ -165,13 +177,13 @@ void cFilterInfosatepg::Process(u_short Pid, u_char Tid, const u_char *Data, int
         if (write(f,infosatdata,len)==len)
         {
             // set bit in Infosatdata bitfield
-            global->Infosatdata[mac].SetBit(ntohs(ishdr->pktnr),true);
+            global->Infosatdata[mac].SetBit(pktnr,true);
         }
     }
     close(f);
 
 #ifdef WRITE_RAW
-    sprintf(file,"%s/%03i.dat",dir,ntohs(ishdr->pktnr));
+    sprintf(file,"%s/%03i.dat",dir,pktnr);
     f=open(file,O_RDWR|O_CREAT,0664);
     if (f==-1) return;
     write(f,Data,Length);

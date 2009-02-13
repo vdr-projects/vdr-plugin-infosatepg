@@ -27,7 +27,7 @@ cPluginInfosatepg::cPluginInfosatepg(void)
     statusMonitor=NULL;
     global=new cGlobalInfosatepg;
     numprocessed=0;
-    mac=EPG_FIRST_DAY_MAC;
+    pmac=EPG_FIRST_DAY_MAC;
 }
 
 cPluginInfosatepg::~cPluginInfosatepg()
@@ -46,7 +46,7 @@ const char *cPluginInfosatepg::CommandLineHelp(void)
 
 bool cPluginInfosatepg::ProcessArgs(int argc, char *argv[])
 {
-    // Implement command line argument processing here if applicable.
+    // Command line argument processing
     static struct option long_options[] =
     {
         { "dir",      required_argument, NULL, 'd'
@@ -127,29 +127,28 @@ void cPluginInfosatepg::MainThreadHook(void)
 {
     // Perform actions in the context of the main program thread.
     if (!global->WaitOk()) return;
-    if (global->ReceivedAll() && !global->ProcessedAll)
+
+    if (!global->ProcessedAll)
     {
-        if (!global->Infosatdata[mac].Processed)
+        if ((!global->Infosatdata[pmac].Processed) && global->Infosatdata[pmac].ReceivedAll())
         {
             isyslog ("infosatepg: found data to be processed: day=%i month=%i",
-                     global->Infosatdata[mac].Day(),global->Infosatdata[mac].Month());
-            cProcessInfosatepg process(mac,global);
-            global->SetWaitTimer();
+                     global->Infosatdata[pmac].Day(),global->Infosatdata[pmac].Month());
+            cProcessInfosatepg process(pmac,global);
+            if (global->Infosatdata[pmac].Processed)
+            {
+                numprocessed++;
+                pmac++;
+            }
+
+            if (numprocessed==EPG_DAYS)
+            {
+                global->ProcessedAll=true;
+                numprocessed=0;
+                pmac=EPG_FIRST_DAY_MAC;
+            }
         }
-        if (global->Infosatdata[mac].Processed)
-        {
-            numprocessed++;
-            mac++;
-        }
-        if (numprocessed==EPG_DAYS)
-        {
-            global->ProcessedAll=true;
-        }
-    }
-    else
-    {
-        numprocessed=0;
-        mac=EPG_FIRST_DAY_MAC;
+        global->SetWaitTimer();
     }
 
     if ((global->Switched()) || (global->ReceivedAll()) || (global->Channel()==-1)) return;
@@ -159,20 +158,18 @@ void cPluginInfosatepg::MainThreadHook(void)
 
     if (ShutdownHandler.IsUserInactive())
     {
-        // we are idle -> use live device if we can
-        cDevice *dev;
-        dev=cDevice::ActualDevice();
-        if (dev->ProvidesTransponder(chan) && !dev->Receiving())
+        // first keep the current channel in "mind"
+        if (global->LastCurrentChannel==-1) global->LastCurrentChannel=
+                cDevice::PrimaryDevice()->CurrentChannel();
+
+        // we are idle -> try to use live device if we can
+        if (cDevice::PrimaryDevice()->SwitchChannel(chan,true))
         {
-            // ok -> use this device
-            dsyslog("infosatepg: found free device %i (live)",dev->DeviceNumber()+1);
-            if (global->LastCurrentChannel==-1) global->LastCurrentChannel=
-                    cDevice::PrimaryDevice()->CurrentChannel();
-            cDevice::PrimaryDevice()->SwitchChannel(chan,true);
             global->SetWaitTimer();
             return;
         }
     }
+    if (global->LastCurrentChannel!=-1)  global->LastCurrentChannel=-1;
 
     // Cannot use live device try another (if possible)
 
@@ -313,11 +310,17 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
     if (!strcasecmp(Command,"RESR"))
     {
         global->ResetReceivedAll();
+        numprocessed=0;
+        pmac=EPG_FIRST_DAY_MAC;
+
         asprintf(&output,"OK\n");
     }
     if (!strcasecmp(Command,"REPR"))
     {
         global->ResetProcessed();
+        numprocessed=0;
+        pmac=EPG_FIRST_DAY_MAC;
+
         asprintf(&output,"OK\n");
     }
     if (!strcasecmp(Command,"STAT"))
@@ -347,12 +350,29 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
         {
             asprintf(&output,"%s Switchback to: unset\n",output);
         }
+
+        asprintf(&output,"%s\n",output);
+        asprintf(&output,"%s      |        | missed  |            |           \n",output);
+        asprintf(&output,"%s Day  | Date   | Packets | Received %% | Processed\n",output);
+        asprintf(&output,"%s------+--------+---------+------------+-----------\n",output);
+
         for (int mac=EPG_FIRST_DAY_MAC; mac<=EPG_LAST_DAY_MAC; mac++)
         {
-            asprintf(&output,"%s Day %i (%02i.%02i.): %3i%% %s\n",
-                     output,mac,global->Infosatdata[mac].Day(),global->Infosatdata[mac].Month(),
+            if (global->ActualMac==mac)
+            {
+                asprintf(&output,"%s*",output);
+            }
+            else
+            {
+                asprintf(&output,"%s ",output);
+            }
+
+            asprintf(&output,"%s %i   | %02i.%02i. |   %3i   |    %3i     |    %s\n",
+                     output,mac,global->Infosatdata[mac].Day(),
+                     global->Infosatdata[mac].Month(),
+                     global->Infosatdata[mac].Missed(),
                      global->Infosatdata[mac].ReceivedPercent(),
-                     global->Infosatdata[mac].Processed ? "processed" : "");
+                     global->Infosatdata[mac].Processed ? "yes" : "no");
         }
     }
     return output;

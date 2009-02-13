@@ -677,7 +677,9 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
     cSchedulesLock SchedulesLock(true,2000); // to be safe ;)
     const cSchedules *Schedules = cSchedules::Schedules(SchedulesLock);
     if (!Schedules) return false; // No write lock -> try later!
-    cSchedule* Schedule = (cSchedule *) Schedules->GetSchedule(channel,true);
+    bool sAdd=false;
+    if ((iEvent->Usage() & USE_APPEND)==USE_APPEND) sAdd=true;
+    cSchedule* Schedule = (cSchedule *) Schedules->GetSchedule(channel,sAdd);
     if (!Schedule) return true; // No schedule -> do nothing (is this ok?)
 
     time_t start=0;
@@ -686,13 +688,19 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
 
     if ((lastEvent) && (iEvent->StartTime()<lastEvent->EndTime()))
     {
-        // try to find, 1st with our own EventID
-        Event = (cEvent *) Schedule->GetEvent(iEvent->EventID());
-        // 2nd with StartTime +/- WaitTime
-        if (!Event) Event= (cEvent *) SearchEvent(Schedule,iEvent);
-        if (!Event) return true; // just bail out with ok
-
         start=iEvent->StartTime();
+        // try to find, 1st with StartTime
+        Event = (cEvent *) Schedule->GetEvent(iEvent->EventID(),iEvent->StartTime());
+        // 2nd with our own EventID
+        if (!Event) Event = (cEvent *) Schedule->GetEvent(iEvent->EventID());
+        // 3rd with StartTime +/- WaitTime
+        if (!Event) Event= (cEvent *) SearchEvent(Schedule,iEvent);
+        if (!Event)
+        {
+            dsyslog("infosatepg: failed to find event %s [%s]", iEvent->Title(),ctime(&start));
+            return true; // just bail out with ok
+        }
+
         dsyslog("infosatepg: changing event %s [%s]", iEvent->Title(),ctime(&start));
 
         // change existing event, prevent EIT EPG to update
@@ -710,7 +718,8 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
         Event->SetDuration(iEvent->Duration());
         Event->SetTitle(iEvent->Title());
         start=iEvent->StartTime();
-        dsyslog("infosatepg: adding new event %s [%s]",iEvent->Title(),ctime(&start));
+        dsyslog("infosatepg: adding new event %s (%lu) [%s]",iEvent->Title(),
+                (u_long) iEvent->EventID(),ctime(&start));
         Schedule->AddEvent(Event);
     }
 

@@ -236,6 +236,11 @@ eOSState cMenuSetupChannelMenu::ProcessKey (eKeys Key)
                 state=osContinue;
                 break;
 
+            case kOk:
+                Store();
+                state=osBack;
+                break;
+
             default:
                 break;
             }

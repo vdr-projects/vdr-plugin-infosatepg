@@ -21,7 +21,7 @@ private:
   cGlobalInfosatepg *global;
   cStatusInfosatepg *statusMonitor;
   int numprocessed;
-  int mac;
+  int pmac;
 public:
   cPluginInfosatepg(void);
   virtual ~cPluginInfosatepg();

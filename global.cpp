@@ -29,6 +29,8 @@ void cGlobalInfosatdata::Init(char *File,int Day,int Month,int Packetcount)
     }
     Processed=false;
     receivedall=false;
+    missed=0;
+    lastpkt=-1;
     receivedpercent=0;
     day=Day;
     month=Month;
@@ -103,6 +105,15 @@ void cGlobalInfosatdata::Debug(const char *Directory)
 }
 #endif
 
+void cGlobalInfosatdata::CheckMissed(int ActualPacket)
+{
+   if (receivedall) return; // count missed packets while receiving
+   if ((ActualPacket!=(lastpkt+1)) && (lastpkt!=-1)) {
+      missed++;
+   }
+   lastpkt=ActualPacket;
+}
+
 bool cGlobalInfosatdata::CheckReceivedAll()
 {
     int donecnt=0;
@@ -149,6 +160,7 @@ cGlobalInfosatepg::cGlobalInfosatepg()
     ProcessedAll=false;
     NoWakeup=false;
     NoDeferredShutdown=false;
+    ActualMac=0;
 }
 
 cGlobalInfosatepg::~cGlobalInfosatepg()
@@ -351,6 +363,7 @@ void cGlobalInfosatepg::ResetReceivedAll(void)
         Infosatdata[mac].ResetReceivedAll();
     }
     wakeuptime=-1;
+    ProcessedAll=false;
 }
 
 void cGlobalInfosatepg::ResetProcessed (void)

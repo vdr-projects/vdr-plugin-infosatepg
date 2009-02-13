@@ -31,6 +31,8 @@ class cGlobalInfosatdata
 private:
     bool        receivedall;
     int         receivedpercent;
+    int		lastpkt;
+    int		missed;
     u_char      day;
     u_char      month;
     u_short     pktcnt;
@@ -39,6 +41,10 @@ private:
 public:
     cGlobalInfosatdata();
     bool Processed;
+    int Missed()
+    {
+        return missed;
+    }
     bool ReceivedAll()
     {
         return receivedall;
@@ -48,6 +54,8 @@ public:
         Init(file,0,0,0);
     }
     bool CheckReceivedAll();
+    void CheckMissed(int ActualPacket);
+    void SetLastPkt(int ActualPacket) { lastpkt = ActualPacket; }
     int ReceivedPercent()
     {
         return receivedpercent;
@@ -76,9 +84,9 @@ public:
     void Init (char *File, int Day, int Month, int Packetcount);
     int Load (int fd);
     int Save (int fd);
-    #ifdef INFOSATEPG_DEBUG
-     void Debug (const char *Directory);
-    #endif
+#ifdef INFOSATEPG_DEBUG
+    void Debug (const char *Directory);
+#endif
 };
 
 class cGlobalInfosatepg
@@ -89,13 +97,13 @@ class cGlobalInfosatepg
     // Bit 20-30  reserved for future used
     // Bit 31     always zero
 
-    #define USE_SHORTTEXT     1
-    #define USE_LONGTEXT      2
-    #define USE_EXTEPG        4
-    #define USE_MERGELONGTEXT 8
-    #define USE_APPEND        16
+#define USE_SHORTTEXT     1
+#define USE_LONGTEXT      2
+#define USE_EXTEPG        4
+#define USE_MERGELONGTEXT 8
+#define USE_APPEND        16
 
-    #define USE_NOTHING       0
+#define USE_NOTHING       0
 
     struct infosatchannels
     {
@@ -104,9 +112,9 @@ class cGlobalInfosatepg
         int Usage;
     };
 
-    #define EPG_FIRST_DAY_MAC 1
-    #define EPG_LAST_DAY_MAC  7
-    #define EPG_DAYS          7
+#define EPG_FIRST_DAY_MAC 1
+#define EPG_LAST_DAY_MAC  7
+#define EPG_DAYS          7
 
 private:
     const char *directory;
@@ -140,7 +148,10 @@ public:
         return wakeuptime;
     }
     int LastCurrentChannel;
-    int Channel() { return channel; }
+    int Channel()
+    {
+        return channel;
+    }
     bool FindReceiverChannel();
     int Frequency;
     char Polarization;
@@ -193,5 +204,6 @@ public:
     {
         return numinfosatchannels;
     }
+    int ActualMac;
 };
 #endif
