@@ -1,5 +1,15 @@
 VDR Plugin 'infosatepg' Revision History
 ----------------------------------------
+2009-02-15: Version 0.0.7
+
+- Added patch from Keine_Ahnung
+- Extended status 
+- Added content handling
+- Changed setup channel option
+- Added extended EPG
+- Improved device chooser
+- Changed wakeup (now set automatically)
+
 2008-12-21: Version 0.0.6
 
 - Added WakeupTime

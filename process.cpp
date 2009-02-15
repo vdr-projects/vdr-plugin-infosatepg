@@ -1058,7 +1058,8 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,time_t *firststarttime)
                             tm.tm_isdst=-1;
                             oldstart=mktime(&tm);
                             dsyslog("infosatepg: using '%s'",s);
-                            dsyslog("infosatepg: start on %02i.%02i.%04i %02i:%02i (%s)",tm.tm_mday,tm.tm_mon+1,tm.tm_year+1900,
+                            dsyslog("infosatepg: start on %02i.%02i.%04i %02i:%02i (%s)",
+                                    tm.tm_mday,tm.tm_mon+1,tm.tm_year+1900,
                                     tm.tm_hour,tm.tm_min,asctime(&tm));
                             ignore=false;
                             ieventnr=1;
@@ -1085,14 +1086,6 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,time_t *firststarttime)
                 if (!ievent) ievent = new cInfosatevent;
                 tm.tm_hour=shour;
                 tm.tm_min=sminute;
-                /*
-                                if (*firststarttime==-1)
-                                {
-                                    shour-=2;
-                                    if (shour<0) shour=24+shour;
-                                    *firststarttime=(shour*100)+sminute;
-                                }
-                */
                 tm.tm_isdst=-1;
                 time_t start=mktime(&tm);
                 if ((oldstart!=(time_t) -1) && (difftime(start,oldstart)<0))

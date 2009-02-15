@@ -45,7 +45,6 @@ private:
   int newDays;
   int newChannelUse;
   int index;
-  cChannel *channel;
 protected:
   virtual void Store(void);
 public:

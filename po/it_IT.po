@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vdr-1.6.0\n"
 "Report-Msgid-Bugs-To: <see README>\n"
-"POT-Creation-Date: 2009-02-08 23:25+0100\n"
+"POT-Creation-Date: 2009-02-15 22:43+0100\n"
 "PO-Revision-Date: 2008-12-24 19:16+0100\n"
 "Last-Translator: Diego Pierotto <vdr-italian@tiscali.it>\n"
 "Language-Team:  <vdr@linuxtv.org>\n"
@@ -320,6 +320,12 @@ msgstr "Canali Infosat"
 msgid "used"
 msgstr "uso"
 
+msgid "Button$Reset"
+msgstr ""
+
+msgid "Button$Copy"
+msgstr ""
+
 msgid "Days in advance"
 msgstr ""
 
@@ -336,6 +342,12 @@ msgid "Extended EPG"
 msgstr ""
 
 msgid "Append non existing events"
+msgstr ""
+
+msgid "Reset all channel settings?"
+msgstr ""
+
+msgid "Copy settings to all channels?"
 msgstr ""
 
 msgid "Read EPG info from infosat"

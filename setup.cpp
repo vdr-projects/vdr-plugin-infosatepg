@@ -66,7 +66,6 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg (cGlobalInfosatepg *Global)
             Add (new cOsdItem (buffer));
         }
     }
-    //SetHelp(tr("Button$Reset"));
 }
 
 cOsdItem *cMenuSetupInfosatepg::NewTitle (const char *s)
@@ -128,9 +127,22 @@ eOSState cMenuSetupInfosatepg::Edit()
     {
         int chanIndex=Current()-chanCurrent;
         if (chanIndex<global->InfosatChannels())
-            return AddSubMenu (new cMenuSetupChannelMenu (global,chanIndex));
+        {
+            eOSState state=AddSubMenu (new cMenuSetupChannelMenu (global,chanIndex));
+            cChannel *chan = Channels.GetByChannelID (global->GetChannelID (chanIndex));
+            if (chan)
+            {
+                int chanuse=global->GetChannelUsage(chanIndex);
+                cString buffer = cString::sprintf ("%s:\t%s",chan->Name(),chanuse ? tr ("used") : "");
+                cOsdItem *osd=Get(Current());
+                osd->SetText(buffer);
+            }
+            return state;
+        }
         else
+        {
             return osUnknown;
+        }
     }
     else
         return osUnknown;
@@ -148,10 +160,6 @@ eOSState cMenuSetupInfosatepg::ProcessKey (eKeys Key)
         {
             switch (Key)
             {
-            case kRed:
-                //dsyslog("Red1 key pressed");
-                state=osContinue;
-                break;
 
             case kOk:
                 state=Edit();
@@ -180,10 +188,10 @@ cMenuSetupChannelMenu::cMenuSetupChannelMenu (cGlobalInfosatepg *Global, int Ind
     newDays=global->GetChannelDays(index);
     if (newDays<=0) newDays=1;
 
-    channel = Channels.GetByChannelID (global->GetChannelID (index));
+    cChannel *channel = Channels.GetByChannelID (global->GetChannelID (index));
     if (!channel) return;
 
-    //SetHelp(NULL,tr("Button$Default"));
+    SetHelp(tr("Button$Reset"),tr("Button$Copy"));
 
     cString buffer = cString::sprintf("---- %s ----", channel->Name());
     Add (new cOsdItem (buffer,osUnknown,false));
@@ -201,6 +209,7 @@ void cMenuSetupChannelMenu::Store (void)
 {
     bool bReprocess=false;
 
+    cChannel *channel = Channels.GetByChannelID (global->GetChannelID (index));
     if (!channel) return;
     cString ChannelID = channel->GetChannelID().ToString();
     cString name = cString::sprintf("Channel-%s",*ChannelID);
@@ -229,10 +238,28 @@ eOSState cMenuSetupChannelMenu::ProcessKey (eKeys Key)
             switch (Key)
             {
             case kRed:
-                state=osContinue;
+                if (Skins.Message(mtInfo,tr("Reset all channel settings?"))==kOk)
+                {
+                    newDays=1;
+                    newChannelUse=USE_NOTHING;
+                    int oldindex=index;
+                    for (index=0; index<global->InfosatChannels(); index++) Store();
+                    index=oldindex;
+                    state=osBack;
+                }
+                else
+                {
+                    state=osContinue;
+                }
                 break;
             case kGreen:
-                //dsyslog("Green1 key pressed");
+                if (Skins.Message(mtInfo,tr("Copy settings to all channels?"))==kOk)
+                {
+                    int oldindex=index;
+                    for (index=0; index<global->InfosatChannels(); index++) Store();
+                    index=oldindex;
+
+                }
                 state=osContinue;
                 break;
 
