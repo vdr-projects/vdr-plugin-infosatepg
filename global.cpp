@@ -161,7 +161,6 @@ cGlobalInfosatepg::cGlobalInfosatepg()
     MAC[4]=0x02;
     WaitTime=10; // default 10 seconds
     SetDirectory ("/tmp");
-    ProcessedAll=false;
     NoWakeup=false;
     NoDeferredShutdown=false;
     ActualMac=0;
@@ -367,7 +366,6 @@ void cGlobalInfosatepg::ResetReceivedAll(void)
         Infosatdata[mac].ResetReceivedAll();
     }
     wakeuptime=-1;
-    ProcessedAll=false;
 }
 
 void cGlobalInfosatepg::ResetProcessed (void)
@@ -377,7 +375,18 @@ void cGlobalInfosatepg::ResetProcessed (void)
         Infosatdata[mac].Processed=false;
     }
     wakeuptime=-1;
-    ProcessedAll=false;
+}
+
+bool cGlobalInfosatepg::ProcessedAll()
+{
+    int numProcessed=0;
+    for (int mac=EPG_FIRST_DAY_MAC; mac<=EPG_LAST_DAY_MAC; mac++)
+    {
+        if (Infosatdata[mac].Processed) numProcessed++;
+    }
+    // all days processed
+    if (numProcessed==EPG_DAYS) return true;
+    return false;
 }
 
 bool cGlobalInfosatepg::ReceivedAll(int *Day, int *Month)

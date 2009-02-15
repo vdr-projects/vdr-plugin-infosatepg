@@ -184,7 +184,7 @@ public:
     int Load();
     int Save();
 
-    bool ProcessedAll;
+    bool ProcessedAll();
     void ResetProcessed (void);
     void ResetReceivedAll(void);
     bool ReceivedAll (int *Day, int *Month);

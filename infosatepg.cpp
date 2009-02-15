@@ -26,7 +26,6 @@ cPluginInfosatepg::cPluginInfosatepg(void)
     // VDR OBJECTS TO EXIST OR PRODUCE ANY OUTPUT!
     statusMonitor=NULL;
     global=new cGlobalInfosatepg;
-    numprocessed=0;
     pmac=EPG_FIRST_DAY_MAC;
 }
 
@@ -128,27 +127,20 @@ void cPluginInfosatepg::MainThreadHook(void)
     // Perform actions in the context of the main program thread.
     if (!global->WaitOk()) return;
 
-    if (!global->ProcessedAll)
+    if (!global->ProcessedAll())
     {
         if ((!global->Infosatdata[pmac].Processed) && global->Infosatdata[pmac].ReceivedAll())
         {
             isyslog ("infosatepg: found data to be processed: day=%i month=%i",
                      global->Infosatdata[pmac].Day(),global->Infosatdata[pmac].Month());
             cProcessInfosatepg process(pmac,global);
-            if (global->Infosatdata[pmac].Processed)
-            {
-                numprocessed++;
-                pmac++;
-            }
-
-            if (numprocessed==EPG_DAYS)
-            {
-                global->ProcessedAll=true;
-                numprocessed=0;
-                pmac=EPG_FIRST_DAY_MAC;
-            }
+            if (global->Infosatdata[pmac].Processed) pmac++;
         }
         global->SetWaitTimer();
+    }
+    else
+    {
+        pmac=EPG_FIRST_DAY_MAC;
     }
 
     if ((global->Switched()) || (global->ReceivedAll()) || (global->Channel()==-1)) return;
@@ -210,7 +202,7 @@ cString cPluginInfosatepg::Active(void)
     // if we cannot receive, we shouldn't wait
     if (global->Channel()==-1) return NULL;
 
-    if (!global->ProcessedAll)
+    if (!global->ProcessedAll())
         return tr("Infosat plugin still working");
 
     // we are done
@@ -241,8 +233,18 @@ time_t cPluginInfosatepg::WakeupTime(void)
     if (global->WakeupTime()==-1) global->SetWakeupTime(300); // just to be safe
     time_t Now = time(NULL);
     time_t Time = cTimer::SetTime(Now,cTimer::TimeToInt(global->WakeupTime()));
-    if (Time <= Now)
+    double diff = difftime(Time,Now);
+    if (diff<0)
+    {
+        // wakeup time is in the past -> add a day
         Time = cTimer::IncDay(Time,1);
+    }
+    else
+    {
+        // wakeup time is in less than 1 hour -> add a day
+        if (diff<3600)
+            Time = cTimer::IncDay(Time,1);
+    }
     return Time;
 }
 
@@ -298,6 +300,8 @@ const char **cPluginInfosatepg::SVDRPHelpPages(void)
         "    Reset received all",
         "REPR\n"
         "    Reprocess again",
+        "SAVE\n",
+        "    Save state of plugin",
         NULL
     };
     return HelpPages;
@@ -310,7 +314,6 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
     if (!strcasecmp(Command,"RESR"))
     {
         global->ResetReceivedAll();
-        numprocessed=0;
         pmac=EPG_FIRST_DAY_MAC;
 
         asprintf(&output,"Restarted receiver\n");
@@ -318,7 +321,6 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
     if (!strcasecmp(Command,"REPR"))
     {
         global->ResetProcessed();
-        numprocessed=0;
         pmac=EPG_FIRST_DAY_MAC;
 
         asprintf(&output,"Reprocess\n");
@@ -336,7 +338,7 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
             asprintf(&output,"%s Received all: yes (%02i.%02i.)",output,day,month);
         else
             asprintf(&output,"%s Received all: no",output);
-        asprintf(&output,"%s Processed all: %s",output,global->ProcessedAll ? "yes" : "no");
+        asprintf(&output,"%s Processed all: %s",output,global->ProcessedAll() ? "yes" : "no");
         asprintf(&output,"%s Switched: %s\n",output,global->Switched() ? "yes" : "no");
         if (global->WakeupTime()!=-1)
         {
