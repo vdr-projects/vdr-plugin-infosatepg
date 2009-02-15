@@ -230,9 +230,9 @@ time_t cPluginInfosatepg::WakeupTime(void)
 
     if (global->NoWakeup) return 0; // user option set -> don't wake up
     if (global->Channel()==-1) return 0; // we cannot receive, so we don't need to wake up
-    if (global->WakeupTime()==-1) global->SetWakeupTime(300); // just to be safe
+    if (global->WakeupTime()==-1) return 0; // just to be safe
     time_t Now = time(NULL);
-    time_t Time = cTimer::SetTime(Now,cTimer::TimeToInt(global->WakeupTime()));
+    time_t Time = global->WakeupTime();
     double diff = difftime(Time,Now);
     if (diff<0)
     {
@@ -323,32 +323,19 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
         global->ResetProcessed();
         pmac=EPG_FIRST_DAY_MAC;
 
-        asprintf(&output,"Reprocess\n");
+        asprintf(&output,"Reprocess files\n");
     }
     if (!strcasecmp(Command,"SAVE"))
     {
         global->Save();
-        asprintf(&output,"InfosatEPG state saved\n");
+        asprintf(&output,"State saved\n");
     }
     if (!strcasecmp(Command,"STAT"))
     {
         int day,month;
         asprintf(&output,"InfosatEPG state:\n");
-        if (global->ReceivedAll(&day,&month))
-            asprintf(&output,"%s Received all: yes (%02i.%02i.)",output,day,month);
-        else
-            asprintf(&output,"%s Received all: no",output);
-        asprintf(&output,"%s Processed all: %s",output,global->ProcessedAll() ? "yes" : "no");
-        asprintf(&output,"%s Switched: %s\n",output,global->Switched() ? "yes" : "no");
-        if (global->WakeupTime()!=-1)
-        {
-            asprintf(&output,"%s WakeupTime: %04i ", output,global->WakeupTime());
-            if (global->NoWakeup) asprintf(&output,"%s (blocked) ",output);
-        }
-        else
-        {
-            asprintf(&output,"%s WakeupTime: unset ", output);
-        }
+        asprintf(&output,"%s Switched: %s",output,global->Switched() ? "yes" : "no");
+
         if (global->LastCurrentChannel!=-1)
         {
             asprintf(&output,"%s Switchback to: %i\n", output, global->LastCurrentChannel);
@@ -356,6 +343,28 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
         else
         {
             asprintf(&output,"%s Switchback to: unset\n",output);
+        }
+
+        if (global->ReceivedAll(&day,&month))
+            asprintf(&output,"%s Received all: yes (%02i.%02i.)",output,day,month);
+        else
+            asprintf(&output,"%s Received all: no",output);
+        asprintf(&output,"%s Processed all: %s",output,global->ProcessedAll() ? "yes" : "no");
+        asprintf(&output,"%s\n",output);
+
+        asprintf(&output,"%s Prevent shutdown until ready: %s",
+                 output,global->NoDeferredShutdown ? "no" : "yes");
+        asprintf(&output,"%s\n",output);
+
+        if (global->WakeupTime()!=-1)
+        {
+            time_t wakeup = global->WakeupTime();
+            asprintf(&output,"%s WakeupTime: %s ", output,ctime(&wakeup));
+            if (global->NoWakeup) asprintf(&output,"%s (blocked) ",output);
+        }
+        else
+        {
+            asprintf(&output,"%s WakeupTime: unset\n", output);
         }
 
         asprintf(&output,"%s\n",output);

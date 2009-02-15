@@ -124,26 +124,23 @@ private:
     int this_day;
     int this_month;
     int numinfosatchannels;
-    int wakeuptime;
+    time_t wakeuptime;
     struct infosatchannels *infosatchannels;
     int channel;
 public:
     cGlobalInfosatepg();
     ~cGlobalInfosatepg();
     cGlobalInfosatdata Infosatdata[EPG_DAYS+1];
-    void SetWakeupTime(int Time)
+    void SetWakeupTime(time_t Time)
     {
-        if (Time==-1) return;
-        if (wakeuptime!=-1) return; // already set
+        if (Time==(time_t) -1) return;
+        if ((Time>wakeuptime) && (wakeuptime!=(time_t) -1)) return; // already set
         wakeuptime=Time;
-        int hour,minute;
-        hour=(int) (wakeuptime/100);
-        minute=wakeuptime-(hour*100);
-        isyslog("infosatepg: wakeup set to %02i:%02i", hour,minute);
+        isyslog("infosatepg: wakeup set to %s", ctime(&wakeuptime));
     }
     bool NoWakeup;
     bool NoDeferredShutdown;
-    int WakeupTime()
+    time_t WakeupTime()
     {
         return wakeuptime;
     }

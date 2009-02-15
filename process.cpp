@@ -619,7 +619,7 @@ cProcessInfosatepg::cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global)
     f=fopen(file,"r");
     if (f)
     {
-        int firststarttime=-1;
+        time_t firststarttime=-1;
         if (ParseInfosatepg(f,&firststarttime))
         {
             global->SetWakeupTime(firststarttime);
@@ -978,7 +978,7 @@ bool cProcessInfosatepg::CheckAnnouncement(char *s,cInfosatevent *iEvent)
     return ret;
 }
 
-bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
+bool cProcessInfosatepg::ParseInfosatepg(FILE *f,time_t *firststarttime)
 {
     char *s,tag;
     int fields,index;
@@ -1085,14 +1085,14 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
                 if (!ievent) ievent = new cInfosatevent;
                 tm.tm_hour=shour;
                 tm.tm_min=sminute;
-
-                if (*firststarttime==-1)
-                {
-                    shour-=2;
-                    if (shour<0) shour=24+shour;
-                    *firststarttime=(shour*100)+sminute;
-                }
-
+                /*
+                                if (*firststarttime==-1)
+                                {
+                                    shour-=2;
+                                    if (shour<0) shour=24+shour;
+                                    *firststarttime=(shour*100)+sminute;
+                                }
+                */
                 tm.tm_isdst=-1;
                 time_t start=mktime(&tm);
                 if ((oldstart!=(time_t) -1) && (difftime(start,oldstart)<0))
@@ -1102,6 +1102,12 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,int *firststarttime)
                     tm.tm_mday++;
                     start=mktime(&tm);
                 }
+
+                if (*firststarttime==(time_t) -1)
+                {
+                    *firststarttime=start+79200; // add 20 hours
+                }
+
                 oldstart=start;
                 ievent->SetStartTime(start);
                 ievent->SetTitle(conv->Convert(title));

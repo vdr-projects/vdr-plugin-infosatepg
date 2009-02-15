@@ -102,7 +102,7 @@ private:
   bool AddInfosatEvent(cChannel *channel, cInfosatevent *iEvent);
   bool CheckOriginal_and_Episode(char **s,cInfosatevent *iEvent,cCharSetConv *conv);
   bool CheckAnnouncement(char *s,cInfosatevent *iEvent);
-  bool ParseInfosatepg(FILE *f,int *firststarttime);
+  bool ParseInfosatepg(FILE *f,time_t *firststarttime);
   cChannel *GetVDRChannel(int frequency, int sid);
   u_long DoSum(u_long sum, const char *buf, int nBytes);
   cEvent *SearchEvent(cSchedule* Schedule, cInfosatevent *iEvent);
