@@ -1039,7 +1039,8 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,time_t *firststarttime)
                         if (!global->InfosatChannels())
                         {
                             // Send message
-                            Skins.QueueMessage(mtInfo,tr("Infosat channellist available"));
+                            Skins.QueueMessage(mtInfo,
+                                               tr("Infosat channellist available"));
                         }
                         // Channel is not in global list->add
                         global->AddChannel(chan->GetChannelID(),USE_NOTHING,1);

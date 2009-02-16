@@ -1,5 +1,9 @@
 VDR Plugin 'infosatepg' Revision History
 ----------------------------------------
+2009-02-16: Version 0.0.8
+
+- Fixed wakeuptime-handling bug
+
 2009-02-15: Version 0.0.7
 
 - Added patch from Keine_Ahnung
