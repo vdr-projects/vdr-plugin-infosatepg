@@ -705,7 +705,6 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
 
         // change existing event, prevent EIT EPG to update
         Event->SetTableID(0);
-        Event->SetVersion(0xff); // is that ok?
         Event->SetSeen(); // meaning of this?
     }
     else
@@ -717,6 +716,7 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
         Event->SetStartTime(iEvent->StartTime());
         Event->SetDuration(iEvent->Duration());
         Event->SetTitle(iEvent->Title());
+        Event->SetVersion(0);
         start=iEvent->StartTime();
         dsyslog("infosatepg: adding new event %s (%lu) [%s]",iEvent->Title(),
                 (u_long) iEvent->EventID(),ctime(&start));
