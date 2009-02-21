@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vdr-1.6.0\n"
 "Report-Msgid-Bugs-To: <see README>\n"
-"POT-Creation-Date: 2009-02-15 22:43+0100\n"
+"POT-Creation-Date: 2009-02-21 08:20+0100\n"
 "PO-Revision-Date: 2008-05-02 16:20+0200\n"
 "Last-Translator: Jochen Dolze <infosatepg@dolze.de>\n"
 "Language-Team: <vdr@linuxtv.org>\n"
@@ -17,6 +17,9 @@ msgstr ""
 
 msgid "Infosat plugin still working"
 msgstr "Infosat Plugin ist noch nicht fertig"
+
+msgid "Menu$infosatepg"
+msgstr "Infosatepg"
 
 msgid "Content$Movie/Drama"
 msgstr "Spielfilm/Drama"
@@ -306,6 +309,9 @@ msgstr "Zeitdifferenz [min]"
 msgid "General options"
 msgstr "Sonstige Optionen"
 
+msgid "Hide main menu"
+msgstr "Verstecke Hauptmenü"
+
 msgid "Prevent wakeup"
 msgstr "Verhindere autom. aufwachen"
 
@@ -350,4 +356,3 @@ msgstr "Einstellungen auf alle Kanäle kopieren?"
 
 msgid "Read EPG info from infosat"
 msgstr "Liest EPG infos von Infosat"
-

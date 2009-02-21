@@ -202,5 +202,6 @@ public:
         return numinfosatchannels;
     }
     int ActualMac;
+    bool HideMainMenu;
 };
 #endif

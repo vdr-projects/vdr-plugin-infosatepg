@@ -28,6 +28,7 @@ private:
   int newNoWakeup;
   int newNoDeferredShutdown;
   int chanCurrent;
+  int newHideMainMenu;
 protected:
   virtual void Store(void);
 private:

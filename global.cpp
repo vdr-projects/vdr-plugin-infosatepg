@@ -164,6 +164,7 @@ cGlobalInfosatepg::cGlobalInfosatepg()
     NoWakeup=false;
     NoDeferredShutdown=false;
     ActualMac=0;
+    HideMainMenu=true;
 }
 
 cGlobalInfosatepg::~cGlobalInfosatepg()

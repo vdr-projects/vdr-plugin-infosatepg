@@ -248,6 +248,21 @@ time_t cPluginInfosatepg::WakeupTime(void)
     return Time;
 }
 
+const char *cPluginInfosatepg::MainMenuEntry(void)
+{
+    if (global->HideMainMenu) return NULL;
+    double overall=0;
+    for (int mac=EPG_FIRST_DAY_MAC; mac<=EPG_LAST_DAY_MAC; mac++)
+    {
+        overall+=global->Infosatdata[mac].ReceivedPercent()*0.9;
+        if (global->Infosatdata[mac].Processed) overall+=10;
+    }
+    overall/=EPG_LAST_DAY_MAC;
+    static char buffer[1024];
+    snprintf(buffer,sizeof(buffer)-1,"%s (%0.f%%)", tr("Menu$infosatepg"), overall);
+    return buffer;
+}
+
 cOsdObject *cPluginInfosatepg::MainMenuAction(void)
 {
     // Perform the action when selected from the main VDR menu.
@@ -269,6 +284,7 @@ bool cPluginInfosatepg::SetupParse(const char *Name, const char *Value)
     else if (!strcasecmp(Name,"Srate")) global->Srate=atoi(Value);
     else if (!strcasecmp(Name,"NoWakeup")) global->NoWakeup=atoi(Value);
     else if (!strcasecmp(Name,"NoDeferredShutdown")) global->NoDeferredShutdown=atoi(Value);
+    else if (!strcasecmp(Name,"HideMainMenu")) global->HideMainMenu=atoi(Value);
     else if (!strcasecmp(Name,"WaitTime")) global->WaitTime=atoi(Value);
     else if (!strcasecmp(Name,"EventTimeDiff")) global->EventTimeDiff=60*atoi(Value);
     else if (!strncasecmp(Name,"Channel",7))

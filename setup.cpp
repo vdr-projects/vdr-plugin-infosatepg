@@ -21,6 +21,7 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg (cGlobalInfosatepg *Global)
     newEventTimeDiff= (int) (global->EventTimeDiff/60);
     newNoWakeup=global->NoWakeup;
     newNoDeferredShutdown=global->NoDeferredShutdown;
+    newHideMainMenu=global->HideMainMenu;
 
     Add (NewTitle (tr ("Scan parameter")));
     cString buffer = cString::sprintf("%s:\t%s",tr("Source"), "S19.2E"); // just for info
@@ -47,7 +48,7 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg (cGlobalInfosatepg *Global)
                                MIN_EVENTTIMEDIFF,MAX_EVENTTIMEDIFF));
 
     Add (NewTitle (tr ("General options")));
-
+    Add (new cMenuEditBoolItem(tr("Hide main menu"),&newHideMainMenu));
     Add (new cMenuEditBoolItem(tr("Prevent wakeup"),&newNoWakeup));
     Add (new cMenuEditBoolItem(tr("Prevent deferred shutdown"),&newNoDeferredShutdown));
 
@@ -96,6 +97,7 @@ void cMenuSetupInfosatepg::Store (void)
     SetupStore ("EventTimeDiff", newEventTimeDiff);
     SetupStore ("NoWakeup",global->NoWakeup=newNoWakeup);
     SetupStore ("NoDeferredShutdown",global->NoDeferredShutdown=newNoDeferredShutdown);
+    SetupStore ("HideMainMenu",global->HideMainMenu=newHideMainMenu);
 
     global->EventTimeDiff = 60*newEventTimeDiff;
 

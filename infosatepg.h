@@ -35,7 +35,7 @@ public:
   virtual void MainThreadHook(void);
   virtual cString Active(void);
   virtual time_t WakeupTime(void);
-  virtual const char *MainMenuEntry(void) { return NULL; }
+  virtual const char *MainMenuEntry(void);
   virtual cOsdObject *MainMenuAction(void);
   virtual cMenuSetupPage *SetupMenu(void);
   virtual bool SetupParse(const char *Name, const char *Value);
