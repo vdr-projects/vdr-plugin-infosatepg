@@ -655,7 +655,7 @@ cEvent *cProcessInfosatepg::SearchEvent(cSchedule* Schedule, cInfosatevent *iEve
             int diff=abs((int) difftime(p->StartTime(),iEvent->StartTime()));
             if (diff<=global->EventTimeDiff)
             {
-                if (diff<maxdiff)
+                if (diff<=maxdiff)
                 {
                     f=p;
                     maxdiff=diff;
@@ -688,7 +688,6 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
 
     if ((lastEvent) && (iEvent->StartTime()<lastEvent->EndTime()))
     {
-        start=iEvent->StartTime();
         // try to find, 1st with StartTime
         Event = (cEvent *) Schedule->GetEvent(iEvent->EventID(),iEvent->StartTime());
         // 2nd with our own EventID
@@ -697,11 +696,12 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
         if (!Event) Event= (cEvent *) SearchEvent(Schedule,iEvent);
         if (!Event)
         {
-            dsyslog("infosatepg: failed to find event %s [%s]", iEvent->Title(),ctime(&start));
+	    start=iEvent->StartTime();
+            dsyslog("infosatepg: failed to find event %s [%li (%s)]", iEvent->Title(),start,ctime(&start));
             return true; // just bail out with ok
         }
-
-        dsyslog("infosatepg: changing event %s [%s]", iEvent->Title(),ctime(&start));
+	start=Event->StartTime();
+        dsyslog("infosatepg: changing event %s [%li]", Event->Title(),start);
 
         // change existing event, prevent EIT EPG to update
         Event->SetTableID(0);
@@ -718,8 +718,8 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
         Event->SetTitle(iEvent->Title());
         Event->SetVersion(0);
         start=iEvent->StartTime();
-        dsyslog("infosatepg: adding new event %s (%lu) [%s]",iEvent->Title(),
-                (u_long) iEvent->EventID(),ctime(&start));
+        dsyslog("infosatepg: adding new event %s (%lu) [%li]",iEvent->Title(),
+                (u_long) iEvent->EventID(),start);
         Schedule->AddEvent(Event);
     }
 
