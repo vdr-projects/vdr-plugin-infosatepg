@@ -612,10 +612,16 @@ const char *cInfosatevent::ExtEPG(void)
 
 // --- cProcessInfosatepg
 cProcessInfosatepg::cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global)
+        :cThread("infosatepg")
 {
+    mac=Mac;
     global=Global;
+}
+
+void cProcessInfosatepg::Action()
+{
     FILE *f;
-    const char *file = global->Infosatdata[Mac].GetFile();
+    const char *file = global->Infosatdata[mac].GetFile();
     f=fopen(file,"r");
     if (f)
     {
@@ -623,7 +629,7 @@ cProcessInfosatepg::cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global)
         if (ParseInfosatepg(f,&firststarttime))
         {
             global->SetWakeupTime(firststarttime);
-            global->Infosatdata[Mac].Processed=true;
+            global->Infosatdata[mac].Processed=true;
         }
         else
         {
@@ -637,7 +643,7 @@ cProcessInfosatepg::cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global)
         {
             // cannot open file -> receive it again
             esyslog("infosatepg: cannot access %s",file);
-            global->Infosatdata[Mac].ResetReceivedAll();
+            global->Infosatdata[mac].ResetReceivedAll();
         }
     }
 }
@@ -696,11 +702,11 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
         if (!Event) Event= (cEvent *) SearchEvent(Schedule,iEvent);
         if (!Event)
         {
-	    start=iEvent->StartTime();
+            start=iEvent->StartTime();
             dsyslog("infosatepg: failed to find event %s [%li (%s)]", iEvent->Title(),start,ctime(&start));
             return true; // just bail out with ok
         }
-	start=Event->StartTime();
+        start=Event->StartTime();
         dsyslog("infosatepg: changing event %s [%li]", Event->Title(),start);
 
         // change existing event, prevent EIT EPG to update

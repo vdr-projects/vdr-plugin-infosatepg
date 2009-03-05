@@ -95,10 +95,11 @@ public:
 };
 
 // --- cProcessInfosatepg
-class cProcessInfosatepg //: public cThread
+class cProcessInfosatepg : public cThread
 {
 private:
   cGlobalInfosatepg *global;
+  int mac;
   bool AddInfosatEvent(cChannel *channel, cInfosatevent *iEvent);
   bool CheckOriginal_and_Episode(char **s,cInfosatevent *iEvent,cCharSetConv *conv);
   bool CheckAnnouncement(char *s,cInfosatevent *iEvent);
@@ -107,8 +108,8 @@ private:
   u_long DoSum(u_long sum, const char *buf, int nBytes);
   cEvent *SearchEvent(cSchedule* Schedule, cInfosatevent *iEvent);
 public:
-  //virtual void Action(); //(int Mac, cGlobalInfosatepg *Global);
   cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global);
+  virtual void Action();
 };
 
 #endif

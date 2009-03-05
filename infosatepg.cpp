@@ -127,14 +127,18 @@ void cPluginInfosatepg::MainThreadHook(void)
     // Perform actions in the context of the main program thread.
     if (!global->WaitOk()) return;
 
-    if (!global->ProcessedAll())
+    if ((global->Infosatdata[pmac].ReceivedAll()) && (!global->ProcessedAll()))
     {
-        if ((!global->Infosatdata[pmac].Processed) && global->Infosatdata[pmac].ReceivedAll())
+        if (!global->Infosatdata[pmac].Processed)
         {
             isyslog ("infosatepg: found data to be processed: day=%i month=%i",
                      global->Infosatdata[pmac].Day(),global->Infosatdata[pmac].Month());
             cProcessInfosatepg process(pmac,global);
-            if (global->Infosatdata[pmac].Processed) pmac++;
+            process.Start();
+        }
+        else
+        {
+            pmac++;
         }
         global->SetWaitTimer();
     }
@@ -233,17 +237,10 @@ time_t cPluginInfosatepg::WakeupTime(void)
     if (global->WakeupTime()==-1) return 0; // just to be safe
     time_t Now = time(NULL);
     time_t Time = global->WakeupTime();
-    double diff = difftime(Time,Now);
-    if (diff<0)
+    if (difftime(Time,Now)<0)
     {
         // wakeup time is in the past -> add a day
         Time = cTimer::IncDay(Time,1);
-    }
-    else
-    {
-        // wakeup time is in less than 1 hour -> add a day
-        if (diff<3600)
-            Time = cTimer::IncDay(Time,1);
     }
     return Time;
 }
