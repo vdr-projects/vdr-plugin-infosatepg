@@ -26,6 +26,7 @@ cPluginInfosatepg::cPluginInfosatepg(void)
     // VDR OBJECTS TO EXIST OR PRODUCE ANY OUTPUT!
     statusMonitor=NULL;
     global=new cGlobalInfosatepg;
+    process=new cProcessInfosatepg();
     pmac=EPG_FIRST_DAY_MAC;
 }
 
@@ -33,6 +34,7 @@ cPluginInfosatepg::~cPluginInfosatepg()
 {
     // Clean up after yourself!
     if (statusMonitor) delete statusMonitor;
+    delete process;
     delete global;
 }
 
@@ -104,13 +106,13 @@ bool cPluginInfosatepg::Start(void)
         isyslog("infosatepg: failed to load plugin status");
     }
     statusMonitor = new cStatusInfosatepg(global);
-
     return true;
 }
 
 void cPluginInfosatepg::Stop(void)
 {
     // Stop any background activities the plugin is performing.
+    process->Stop();
     if (global->Save()==-1)
     {
         isyslog("infosatepg: failed to save plugin status");
@@ -131,10 +133,14 @@ void cPluginInfosatepg::MainThreadHook(void)
     {
         if (!global->Infosatdata[pmac].Processed)
         {
-            isyslog ("infosatepg: found data to be processed: day=%i month=%i",
-                     global->Infosatdata[pmac].Day(),global->Infosatdata[pmac].Month());
-            cProcessInfosatepg process(pmac,global);
-            process.Start();
+            if (!process->Active())
+            {
+                isyslog ("infosatepg: found data to be processed: day=%i month=%i",
+                         global->Infosatdata[pmac].Day(),global->Infosatdata[pmac].Month());
+
+                process->SetInfo(pmac,global);
+                process->Start();
+            }
         }
         else
         {

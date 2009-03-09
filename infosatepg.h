@@ -11,6 +11,7 @@
 
 #include "global.h"
 #include "status.h"
+#include "process.h"
 
 static const char *VERSION        = "0.0.8";
 static const char *DESCRIPTION    = trNOOP("Read EPG info from infosat");
@@ -20,6 +21,7 @@ private:
   // Add any member variables or functions you may need here.
   cGlobalInfosatepg *global;
   cStatusInfosatepg *statusMonitor;
+  cProcessInfosatepg *process;
   int pmac;
 public:
   cPluginInfosatepg(void);

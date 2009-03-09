@@ -611,8 +611,14 @@ const char *cInfosatevent::ExtEPG(void)
 }
 
 // --- cProcessInfosatepg
-cProcessInfosatepg::cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global)
+cProcessInfosatepg::cProcessInfosatepg()
         :cThread("infosatepg")
+{
+    mac=-1;
+    global=NULL;
+}
+
+void cProcessInfosatepg::SetInfo(int Mac, cGlobalInfosatepg *Global)
 {
     mac=Mac;
     global=Global;
@@ -620,6 +626,8 @@ cProcessInfosatepg::cProcessInfosatepg(int Mac, cGlobalInfosatepg *Global)
 
 void cProcessInfosatepg::Action()
 {
+    if ((mac<EPG_FIRST_DAY_MAC) || (mac>EPG_LAST_DAY_MAC)) return;
+
     FILE *f;
     const char *file = global->Infosatdata[mac].GetFile();
     f=fopen(file,"r");
