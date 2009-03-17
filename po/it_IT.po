@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: vdr-1.6.0\n"
 "Report-Msgid-Bugs-To: <see README>\n"
-"POT-Creation-Date: 2009-02-21 08:20+0100\n"
+"POT-Creation-Date: 2009-03-12 13:00+0100\n"
 "PO-Revision-Date: 2009-02-17 23:15+0100\n"
 "Last-Translator: Diego Pierotto <vdr-italian@tiscali.it>\n"
 "Language-Team:  <vdr@linuxtv.org>\n"
@@ -306,9 +306,6 @@ msgstr "Opzioni evento"
 msgid "Wait time [s]"
 msgstr "Tempo di attesa [s]"
 
-msgid "Time difference [min]"
-msgstr "Differenza tempo [min]"
-
 msgid "General options"
 msgstr "Opzioni generali"
 
@@ -359,3 +356,4 @@ msgstr "Copiare impostazioni nei canali?"
 
 msgid "Read EPG info from infosat"
 msgstr "Legge info EPG da Infosat"
+

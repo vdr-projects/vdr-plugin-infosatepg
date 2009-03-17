@@ -105,6 +105,7 @@ bool cPluginInfosatepg::Start(void)
     {
         isyslog("infosatepg: failed to load plugin status");
     }
+
     statusMonitor = new cStatusInfosatepg(global);
     return true;
 }
@@ -289,7 +290,6 @@ bool cPluginInfosatepg::SetupParse(const char *Name, const char *Value)
     else if (!strcasecmp(Name,"NoDeferredShutdown")) global->NoDeferredShutdown=atoi(Value);
     else if (!strcasecmp(Name,"HideMainMenu")) global->HideMainMenu=atoi(Value);
     else if (!strcasecmp(Name,"WaitTime")) global->WaitTime=atoi(Value);
-    else if (!strcasecmp(Name,"EventTimeDiff")) global->EventTimeDiff=60*atoi(Value);
     else if (!strncasecmp(Name,"Channel",7))
     {
         if (strlen(Name)<10) return false;
@@ -387,9 +387,9 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
         }
 
         asprintf(&output,"%s\n",output);
-        asprintf(&output,"%s      |        | missed  |            |           \n",output);
-        asprintf(&output,"%s Day  | Date   | Packets | Received %% | Processed\n",output);
-        asprintf(&output,"%s------+--------+---------+------------+-----------\n",output);
+        asprintf(&output,"%s      |        | missed  |            |            | unlocated\n",output);
+        asprintf(&output,"%s Day  | Date   | Packets | Received %% | Processed  | Events\n",output);
+        asprintf(&output,"%s------+--------+---------+------------+------------+----------\n",output);
 
         for (int mac=EPG_FIRST_DAY_MAC; mac<=EPG_LAST_DAY_MAC; mac++)
         {
@@ -402,12 +402,13 @@ cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option,
                 asprintf(&output,"%s ",output);
             }
 
-            asprintf(&output,"%s %i   | %02i.%02i. |   %3i   |    %3i     |    %s\n",
+            asprintf(&output,"%s %i   | %02i.%02i. |   %3i   |    %3i     |    %s     |  %3i\n",
                      output,mac,global->Infosatdata[mac].Day(),
                      global->Infosatdata[mac].Month(),
                      global->Infosatdata[mac].Missed(),
                      global->Infosatdata[mac].ReceivedPercent(),
-                     global->Infosatdata[mac].Processed ? "yes" : "no");
+                     global->Infosatdata[mac].Processed ? "yes" : " no",
+                     global->Infosatdata[mac].Unlocated);
         }
     }
     return output;

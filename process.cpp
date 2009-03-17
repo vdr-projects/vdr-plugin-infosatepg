@@ -659,7 +659,9 @@ void cProcessInfosatepg::Action()
 cEvent *cProcessInfosatepg::SearchEvent(cSchedule* Schedule, cInfosatevent *iEvent)
 {
     cEvent *f=NULL;
-    int maxdiff=MAX_EVENTTIMEDIFF*60;
+    int maxdiff=INT_MAX;
+    int eventTimeDiff=iEvent->Duration()/5;
+    if (eventTimeDiff<600) eventTimeDiff=600;
 
     for (cEvent *p = Schedule->Events()->First(); p; p = Schedule->Events()->Next(p))
     {
@@ -667,7 +669,7 @@ cEvent *cProcessInfosatepg::SearchEvent(cSchedule* Schedule, cInfosatevent *iEve
         {
             // found event with same title
             int diff=abs((int) difftime(p->StartTime(),iEvent->StartTime()));
-            if (diff<=global->EventTimeDiff)
+            if (diff<=eventTimeDiff)
             {
                 if (diff<=maxdiff)
                 {
@@ -700,6 +702,12 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
     cEvent *Event=NULL;
     const cEvent *lastEvent=Schedule->Events()->Last();
 
+    if (iEvent->Duration()==0)
+    {
+        start=iEvent->StartTime();
+        isyslog("infosatepg: event %s [%li (%s)] without duration", iEvent->Title(),start,ctime(&start));
+    }
+
     if ((lastEvent) && (iEvent->StartTime()<lastEvent->EndTime()))
     {
         // try to find, 1st with StartTime
@@ -712,6 +720,7 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
         {
             start=iEvent->StartTime();
             dsyslog("infosatepg: failed to find event %s [%li (%s)]", iEvent->Title(),start,ctime(&start));
+            global->Infosatdata[mac].Unlocated++;
             return true; // just bail out with ok
         }
         start=Event->StartTime();
@@ -754,6 +763,14 @@ bool cProcessInfosatepg::AddInfosatEvent(cChannel *channel, cInfosatevent *iEven
         if (iEvent->ShortText() && iEvent->Title())
         {
             if (!strcmp(iEvent->ShortText(),iEvent->Title()))
+            {
+                iEvent->SetShortText(NULL);
+            }
+        }
+        // if shorttext is the same as the description -> skip short text
+        if (iEvent->ShortText() && Event->Description())
+        {
+            if (!strcmp(iEvent->ShortText(),Event->Description()))
             {
                 iEvent->SetShortText(NULL);
             }
@@ -1239,12 +1256,35 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,time_t *firststarttime)
             break;
         case 'Q':
             if (ignore) continue;
-            if (ievent)
+            if (!ievent) continue;
+            if ((ievent->Duration()==0) && (ievent->StartTime()!=0))
             {
-                if (!AddInfosatEvent(chan,ievent)) abort=true;
-                delete ievent;
-                ievent=NULL;
+                int ehour,eminute;
+                fields=sscanf(s,"%d:%d",&ehour,&eminute);
+                if (fields==2)
+                {
+                    tm.tm_hour=ehour;
+                    tm.tm_min=eminute;
+                    tm.tm_isdst=-1;
+                    time_t end=mktime(&tm);
+                    if (difftime(end,ievent->StartTime())<0)
+                    {
+                        // last ievent was yesterday
+                        tm.tm_isdst=-1;
+                        tm.tm_mday++;
+                        end=mktime(&tm);
+                    }
+                    double duration=difftime(end,ievent->StartTime());
+                    if (duration>0)
+                    {
+                        ievent->SetDuration((int) (duration+60));
+                    }
+                }
+
             }
+            if (!AddInfosatEvent(chan,ievent)) abort=true;
+            delete ievent;
+            ievent=NULL;
         default:
             continue;
         }

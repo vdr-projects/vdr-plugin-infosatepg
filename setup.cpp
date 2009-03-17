@@ -18,7 +18,6 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg (cGlobalInfosatepg *Global)
     newSrate = global->Srate;
     newPid = global->Pid;
     newWaitTime = global->WaitTime;
-    newEventTimeDiff= (int) (global->EventTimeDiff/60);
     newNoWakeup=global->NoWakeup;
     newNoDeferredShutdown=global->NoDeferredShutdown;
     newHideMainMenu=global->HideMainMenu;
@@ -44,8 +43,6 @@ cMenuSetupInfosatepg::cMenuSetupInfosatepg (cGlobalInfosatepg *Global)
 
     Add (NewTitle (tr ("Event options")));
     Add (new cMenuEditIntItem (tr ("Wait time [s]"), &newWaitTime,MIN_WAITTIME,MAX_WAITTIME));
-    Add (new cMenuEditIntItem (tr ("Time difference [min]"), &newEventTimeDiff,
-                               MIN_EVENTTIMEDIFF,MAX_EVENTTIMEDIFF));
 
     Add (NewTitle (tr ("General options")));
     Add (new cMenuEditBoolItem(tr("Hide main menu"),&newHideMainMenu));
@@ -77,10 +74,7 @@ cOsdItem *cMenuSetupInfosatepg::NewTitle (const char *s)
 
 void cMenuSetupInfosatepg::Store (void)
 {
-    bool bResetProcessed=false;
     bool bResetReceivedAll=false;
-
-    if (global->EventTimeDiff!= (60*newEventTimeDiff)) bResetProcessed=true;
 
     if ((global->Frequency!=newFrequency) || (global->Polarization!=newPolarization) ||
             (global->Srate!=newSrate) || (global->Pid!=newPid))
@@ -94,12 +88,9 @@ void cMenuSetupInfosatepg::Store (void)
     SetupStore ("Pid", global->Pid = newPid);
 
     SetupStore ("WaitTime", global->WaitTime = newWaitTime);
-    SetupStore ("EventTimeDiff", newEventTimeDiff);
     SetupStore ("NoWakeup",global->NoWakeup=newNoWakeup);
     SetupStore ("NoDeferredShutdown",global->NoDeferredShutdown=newNoDeferredShutdown);
     SetupStore ("HideMainMenu",global->HideMainMenu=newHideMainMenu);
-
-    global->EventTimeDiff = 60*newEventTimeDiff;
 
     if (bResetReceivedAll)
     {
@@ -112,11 +103,6 @@ void cMenuSetupInfosatepg::Store (void)
         {
             esyslog("infosatepg: found no channel to receive, check setup");
         }
-    }
-    else if (bResetProcessed)
-    {
-        dsyslog ("infosatepg: reprocess files (later)");
-        global->ResetProcessed();
     }
 }
 
@@ -201,7 +187,8 @@ cMenuSetupChannelMenu::cMenuSetupChannelMenu (cGlobalInfosatepg *Global, int Ind
     Add(new cMenuEditIntItem(tr("Days in advance"),&newDays,1,EPG_DAYS));
     Add(new cMenuEditBitItem(tr("Short text"),(uint *) &newChannelUse,USE_SHORTTEXT));
     Add(new cMenuEditBitItem(tr("Long text"),(uint *) &newChannelUse,USE_LONGTEXT));
-    Add(new cMenuEditBitItem(tr("Merge long texts"),(uint *) &newChannelUse,USE_MERGELONGTEXT));
+    if ((newChannelUse & USE_APPEND)!=USE_APPEND)
+        Add(new cMenuEditBitItem(tr("Merge long texts"),(uint *) &newChannelUse,USE_MERGELONGTEXT));
     Add(new cMenuEditBitItem(tr("Extended EPG"),(uint *) &newChannelUse,USE_EXTEPG));
     Add(new cMenuEditBitItem(tr("Append non existing events"),(uint *) &newChannelUse,USE_APPEND));
 

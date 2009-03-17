@@ -30,6 +30,7 @@ void cGlobalInfosatdata::Init(char *File,int Day,int Month,int Packetcount)
     Processed=false;
     receivedall=false;
     missed=0;
+    Unlocated=0;
     lastpkt=-1;
     receivedpercent=0;
     day=Day;
@@ -57,6 +58,8 @@ int cGlobalInfosatdata::Save(int fd)
     if (ret!=sizeof (pktcnt)) return -1;
     ret=write (fd,&missed,sizeof (missed));
     if (ret!=sizeof (missed)) return -1;
+    ret=write (fd,&Unlocated,sizeof (Unlocated));
+    if (ret!=sizeof (Unlocated)) return -1;
     ret=write (fd,&bitfield,sizeof (bitfield));
     if (ret!=sizeof (bitfield)) return -1;
     ret=write (fd,&file,sizeof (file));
@@ -79,8 +82,10 @@ int cGlobalInfosatdata::Load(int fd)
     if (ret!=sizeof (month)) return -1;
     ret=read (fd,&pktcnt,sizeof (pktcnt));
     if (ret!=sizeof (pktcnt)) return -1;
-    ret=read (fd,&missed,sizeof (missed));
+    ret=read (fd,&missed,sizeof (missed)); 
     if (ret!=sizeof (missed)) return -1;
+    ret=read (fd,&Unlocated,sizeof (Unlocated)); 
+    if (ret!=sizeof (Unlocated)) return -1;
     ret=read (fd,&bitfield,sizeof (bitfield));
     if (ret!=sizeof (bitfield)) return -1;
     ret=read (fd,&file,sizeof (file));
@@ -95,7 +100,6 @@ int cGlobalInfosatdata::Load(int fd)
             Init(file,day,month,pktcnt);
         }
     }
-
     return ret;
 }
 
@@ -111,11 +115,12 @@ void cGlobalInfosatdata::Debug(const char *Directory)
 
 void cGlobalInfosatdata::CheckMissed(int ActualPacket)
 {
-   if (receivedall) return; // count missed packets while receiving
-   if ((ActualPacket!=(lastpkt+1)) && (lastpkt!=-1)) {
-      missed++;
-   }
-   lastpkt=ActualPacket;
+    if (receivedall) return; // count missed packets while receiving
+    if ((ActualPacket!=(lastpkt+1)) && (lastpkt!=-1))
+    {
+        missed++;
+    }
+    lastpkt=ActualPacket;
 }
 
 bool cGlobalInfosatdata::CheckReceivedAll()
@@ -152,7 +157,6 @@ cGlobalInfosatepg::cGlobalInfosatepg()
     Srate = 22000;
     Frequency = 12604;
     Polarization ='h';
-    EventTimeDiff=480; // default 8 minutes
     channel=-1;
     MAC[0]=0x01;
     MAC[1]=0x00;

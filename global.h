@@ -18,8 +18,6 @@
 
 #define MIN_WAITTIME 10      // s
 #define MAX_WAITTIME 120     // s
-#define MIN_EVENTTIMEDIFF 5  // min
-#define MAX_EVENTTIMEDIFF 10 // min
 
 class cGlobalInfosatdata
 {
@@ -41,6 +39,7 @@ private:
 public:
     cGlobalInfosatdata();
     bool Processed;
+    int	Unlocated; // unlocated events
     int Missed()
     {
         return missed;
@@ -55,7 +54,10 @@ public:
     }
     bool CheckReceivedAll();
     void CheckMissed(int ActualPacket);
-    void SetLastPkt(int ActualPacket) { lastpkt = ActualPacket; }
+    void SetLastPkt(int ActualPacket)
+    {
+        lastpkt = ActualPacket;
+    }
     int ReceivedPercent()
     {
         return receivedpercent;
@@ -154,7 +156,6 @@ public:
     char Polarization;
     int Srate;
     int Pid;
-    int EventTimeDiff;
     int WaitTime;
     const char *Directory()
     {
