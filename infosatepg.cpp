@@ -161,15 +161,19 @@ void cPluginInfosatepg::MainThreadHook(void)
 
     if (ShutdownHandler.IsUserInactive())
     {
-        // first keep the current channel in "mind"
-        if (global->LastCurrentChannel==-1) global->LastCurrentChannel=
-                cDevice::PrimaryDevice()->CurrentChannel();
-
-        // we are idle -> try to use live device if we can
-        if (cDevice::PrimaryDevice()->SwitchChannel(chan,true))
+        // only switch primary device if we are not recording
+        if (!cDevice::PrimaryDevice()->Receiving())
         {
-            global->SetWaitTimer();
-            return;
+            // first keep the current channel in "mind"
+            if (global->LastCurrentChannel==-1) global->LastCurrentChannel=
+                    cDevice::PrimaryDevice()->CurrentChannel();
+
+            // we are idle -> try to use live device if we can
+            if (cDevice::PrimaryDevice()->SwitchChannel(chan,true))
+            {
+                global->SetWaitTimer();
+                return;
+            }
         }
     }
     if (global->LastCurrentChannel!=-1)  global->LastCurrentChannel=-1;
@@ -241,7 +245,11 @@ time_t cPluginInfosatepg::WakeupTime(void)
 
     if (global->NoWakeup) return 0; // user option set -> don't wake up
     if (global->Channel()==-1) return 0; // we cannot receive, so we don't need to wake up
-    if (global->WakeupTime()==-1) return 0; // just to be safe
+    if (global->WakeupTime()==-1)
+    {
+        // no wakeup? set wakeup to 03:00
+        global->SetWakeupTime(cTimer::SetTime(time(NULL),cTimer::TimeToInt(300)));
+    }
     time_t Now = time(NULL);
     time_t Time = global->WakeupTime();
     if (difftime(Time,Now)<0)

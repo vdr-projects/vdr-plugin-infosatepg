@@ -1,5 +1,11 @@
 VDR Plugin 'infosatepg' Revision History
 ----------------------------------------
+2009-07-12: Version 0.0.9
+
+- Added patch from Jowi24 (channel not available)
+- Added processing for some special cases (Pilot, Start der X. Staffel)
+- Set wakeup to 3:00am if wakeup isn't set
+
 2009-02-16: Version 0.0.8
 
 - Fixed wakeuptime-handling bug

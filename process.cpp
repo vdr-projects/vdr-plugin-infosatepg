@@ -660,7 +660,7 @@ cEvent *cProcessInfosatepg::SearchEvent(cSchedule* Schedule, cInfosatevent *iEve
 {
     cEvent *f=NULL;
     int maxdiff=INT_MAX;
-    int eventTimeDiff=iEvent->Duration()/5;
+    int eventTimeDiff=iEvent->Duration()/4;
     if (eventTimeDiff<600) eventTimeDiff=600;
 
     for (cEvent *p = Schedule->Events()->First(); p; p = Schedule->Events()->Next(p))
@@ -885,6 +885,13 @@ bool cProcessInfosatepg::CheckOriginal_and_Episode(char **s,cInfosatevent *iEven
         (*s)+=11;
         return false;
     }
+    if (!strcmp(*s,"Sat.1 FilmFilm"))
+    {
+        // just ignore
+        (*s)+=14;
+        return false;
+    }
+
     if (!strcmp(*s,"NIGHT ACTION"))
     {
         iEvent->SetAnnouncement("Action");
@@ -948,6 +955,11 @@ bool cProcessInfosatepg::CheckOriginal_and_Episode(char **s,cInfosatevent *iEven
     if (pOT[-1]==' ') pOT[-1]=0;
     // check some things
     if (!strcmp(pOT,"TM")) return false;
+    if (!strcmp(pOT,"Pilot"))
+    {
+        iEvent->SetAnnouncement("Pilot");
+        return false;
+    }
     // check for (number)
     char *endp=NULL;
     long int ret =strtol(pOT,&endp,10);
@@ -983,6 +995,10 @@ bool cProcessInfosatepg::CheckAnnouncement(char *s,cInfosatevent *iEvent)
     else if ((strlen(s)>=10) && (!strncmp(s,"Tagestipp!",10)))
     {
         iEvent->SetRating("Tipp");
+    }
+    else if ((strlen(s)>=10) && (!strncmp(s,"Start der ",10)))
+    {
+        // just ignore this
     }
     else if ((strlen(s)>=15) && (!strncmp(s,"CARTOON NETWORK",15)))
     {
