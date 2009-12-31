@@ -82,9 +82,9 @@ int cGlobalInfosatdata::Load(int fd)
     if (ret!=sizeof (month)) return -1;
     ret=read (fd,&pktcnt,sizeof (pktcnt));
     if (ret!=sizeof (pktcnt)) return -1;
-    ret=read (fd,&missed,sizeof (missed)); 
+    ret=read (fd,&missed,sizeof (missed));
     if (ret!=sizeof (missed)) return -1;
-    ret=read (fd,&Unlocated,sizeof (Unlocated)); 
+    ret=read (fd,&Unlocated,sizeof (Unlocated));
     if (ret!=sizeof (Unlocated)) return -1;
     ret=read (fd,&bitfield,sizeof (bitfield));
     if (ret!=sizeof (bitfield)) return -1;
@@ -371,6 +371,8 @@ void cGlobalInfosatepg::ResetReceivedAll(void)
         Infosatdata[mac].ResetReceivedAll();
     }
     wakeuptime=-1;
+    this_day=-1;
+    this_month=-1;
 }
 
 void cGlobalInfosatepg::ResetProcessed (void)
@@ -380,6 +382,8 @@ void cGlobalInfosatepg::ResetProcessed (void)
         Infosatdata[mac].Processed=false;
     }
     wakeuptime=-1;
+    this_day=-1;
+    this_month=-1;
 }
 
 bool cGlobalInfosatepg::ProcessedAll()
@@ -410,36 +414,40 @@ bool cGlobalInfosatepg::ReceivedAll(int *Day, int *Month)
     // All days fully received
     if (numReceived==EPG_DAYS)
     {
-        // First entry from today?
-        if ((Infosatdata[EPG_FIRST_DAY_MAC].Day() ==tm.tm_mday) &&
-                (Infosatdata[EPG_FIRST_DAY_MAC].Month() ==tm.tm_mon+1))
+        if ((this_day==-1) && (this_month==-1))
         {
-            // Yes
-            if ((this_day!=tm.tm_mday) || (this_month!=tm.tm_mon+1))
-            {
-                isyslog ("infosatepg: all data received");
-                this_day=tm.tm_mday;
-                this_month=tm.tm_mon+1;
-            }
+            isyslog ("infosatepg: all data received");
+            this_day=tm.tm_mday;
+            this_month=tm.tm_mon+1;
+        }
+        // From today?
+        if ((this_day==tm.tm_mday) && (this_month==tm.tm_mon+1))
+        {
             res=true;
         }
         else
         {
             // New day, but new data is ready only after wakeup-time
-            time_t Now = time(NULL);
-            time_t Time;
-            if (WakeupTime()==-1) Time=Now+301; // If no wakeup set, just wait
-            else Time = WakeupTime();
-            if (Now>=(Time-300))
+            time_t Time=WakeupTime();
+            if (Time==-1)
             {
-                // new day and new data should be available
-                ResetReceivedAll();
-                res=false;
+                // no wakeuptime set, just wait
+                res=true;
             }
             else
             {
-                // wait till we are after wakeuptime
-                res=true;
+                Time-=300;
+                if (Now>=Time)
+                {
+                    // new day and new data should be available
+                    ResetReceivedAll();
+                    res=false;
+                }
+                else
+                {
+                    // wait till we are after wakeuptime
+                    res=true;
+                }
             }
         }
     }

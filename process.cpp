@@ -636,7 +636,17 @@ void cProcessInfosatepg::Action()
         time_t firststarttime=-1;
         if (ParseInfosatepg(f,&firststarttime))
         {
-            global->SetWakeupTime(firststarttime);
+            if (firststarttime>time(NULL))
+            {
+                global->SetWakeupTime(firststarttime);
+            }
+            else
+            {
+                isyslog("infosatepg: wakeuptime from infosat is in the past");
+                firststarttime=cTimer::SetTime(time(NULL),cTimer::TimeToInt(300));
+                firststarttime+=79200; // add 20 hours
+                global->SetWakeupTime(firststarttime);
+            }
             global->Infosatdata[mac].Processed=true;
         }
         else
