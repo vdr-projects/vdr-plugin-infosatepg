@@ -472,7 +472,11 @@ bool cGlobalInfosatepg::FindReceiverChannel()
             if (chan->Source()!=source) continue;
             if (chan->Srate()!=Srate) continue;
             if (chan->Frequency()!=Frequency) continue;
+#if VDRVERSNUM < 10713
             if (chan->Polarization()!=Polarization) continue;
+#else
+            if (strpbrk(chan->Parameters(),"HVLRhvlr")!=Polarization) continue;
+#endif
             channel=i;
             return true;
         }
@@ -487,7 +491,11 @@ bool cGlobalInfosatepg::FindReceiverChannel()
             if (chan->Source()!=source) continue;
             if (chan->Srate()!=Srate) continue;
             if (chan->Frequency()!=(Frequency+1)) continue;
+#if VDRVERSNUM < 10713
             if (chan->Polarization()!=Polarization) continue;
+#else
+            if (strpbrk(chan->Parameters(),"HVLRhvlr")!=Polarization) continue;
+#endif
             channel=i;
             return true;
         }
@@ -502,7 +510,11 @@ bool cGlobalInfosatepg::FindReceiverChannel()
             if (chan->Source()!=source) continue;
             if (chan->Srate()!=Srate) continue;
             if (chan->Frequency()!=(Frequency-1)) continue;
+#if VDRVERSNUM < 10713
             if (chan->Polarization()!=Polarization) continue;
+#else
+            if (strpbrk(chan->Parameters(),"HVLRhvlr")!=Polarization) continue;
+#endif
             channel=i;
             return true;
         }
