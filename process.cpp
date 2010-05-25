@@ -1062,7 +1062,8 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,time_t *firststarttime)
         {
             if (ievent)
             {
-                int content_descr,fsk;
+                int fsk;
+                unsigned int content_descr;
                 fields=sscanf(s,"%x %d",&content_descr,&fsk);
                 if (fields==1) ievent->SetContentDescriptor(content_descr);
                 if (fields==2)
@@ -1274,7 +1275,7 @@ bool cProcessInfosatepg::ParseInfosatepg(FILE *f,time_t *firststarttime)
             // contains description
             if (ignore) continue;
             if (!ievent) continue;
-            strreplace(s,0x8A,'\n');
+            strreplace(s,-118,'\n'); // 0x8a
             ievent->SetDescription(conv->Convert(s));
             if (!AddInfosatEvent(chan,ievent)) abort=true;
             delete ievent;
