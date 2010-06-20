@@ -475,9 +475,9 @@ bool cGlobalInfosatepg::FindReceiverChannel()
 #if VDRVERSNUM < 10713
             if (chan->Polarization()!=Polarization) continue;
 #else
-            char *polarization=strpbrk(chan->Parameters(),"HVLRhvlr");
+            const char *polarization=strpbrk(chan->Parameters(),"HVLRhvlr");
             if (!polarization) continue;
-            if (*polarization!=Polarization) continue;
+            if (toupper(*polarization)!=toupper(Polarization)) continue;
 #endif
             channel=i;
             return true;
@@ -496,9 +496,9 @@ bool cGlobalInfosatepg::FindReceiverChannel()
 #if VDRVERSNUM < 10713
             if (chan->Polarization()!=Polarization) continue;
 #else
-            char *polarization=strpbrk(chan->Parameters(),"HVLRhvlr");
+            const char *polarization=strpbrk(chan->Parameters(),"HVLRhvlr");
             if (!polarization) continue;
-            if (*polarization!=Polarization) continue;
+            if (toupper(*polarization)!=toupper(Polarization)) continue;
 #endif
             channel=i;
             return true;
@@ -517,9 +517,9 @@ bool cGlobalInfosatepg::FindReceiverChannel()
 #if VDRVERSNUM < 10713
             if (chan->Polarization()!=Polarization) continue;
 #else
-            char *polarization=strpbrk(chan->Parameters(),"HVLRhvlr");
+            const char *polarization=strpbrk(chan->Parameters(),"HVLRhvlr");
             if (!polarization) continue;
-            if (*polarization!=Polarization) continue;
+            if (toupper(*polarization)!=toupper(Polarization)) continue;
 #endif
             channel=i;
             return true;

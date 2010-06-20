@@ -18,6 +18,10 @@
 #include "setup.h"
 #include "process.h"
 
+#define UNUSED(v) UNUSED_ ## v __attribute__((unused))
+
+extern char *strcatrealloc(char *dest, const char *src);
+
 // --- cPluginInfosatepg
 cPluginInfosatepg::cPluginInfosatepg(void)
 {
@@ -52,7 +56,7 @@ bool cPluginInfosatepg::ProcessArgs(int argc, char *argv[])
     {
         { "dir",      required_argument, NULL, 'd'
         },
-        { NULL }
+        { 0,0,0,0 }
     };
 
     int c;
@@ -310,7 +314,7 @@ bool cPluginInfosatepg::SetupParse(const char *Name, const char *Value)
     return true;
 }
 
-bool cPluginInfosatepg::Service(const char *Id, void *Data)
+bool cPluginInfosatepg::Service(const char *UNUSED(Id), void *UNUSED(Data))
 {
     // Handle custom service requests from other plugins
     return false;
@@ -334,91 +338,91 @@ const char **cPluginInfosatepg::SVDRPHelpPages(void)
     return HelpPages;
 }
 
-cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *Option, int &ReplyCode)
+cString cPluginInfosatepg::SVDRPCommand(const char *Command, const char *UNUSED(Option),
+                                        int &UNUSED(ReplyCode))
 {
     // Process SVDRP commands
-    char *output=NULL;
+    cString output;
     if (!strcasecmp(Command,"RESR"))
     {
         global->ResetReceivedAll();
         pmac=EPG_FIRST_DAY_MAC;
 
-        asprintf(&output,"Restarted receiver\n");
+        output="Restarted receiver\n";
     }
     if (!strcasecmp(Command,"REPR"))
     {
         global->ResetProcessed();
         pmac=EPG_FIRST_DAY_MAC;
 
-        asprintf(&output,"Reprocess files\n");
+        output="Reprocess files\n";
     }
     if (!strcasecmp(Command,"SAVE"))
     {
         global->Save();
-        asprintf(&output,"State saved\n");
+        output="State saved\n";
     }
+
     if (!strcasecmp(Command,"STAT"))
     {
         int day,month;
-        asprintf(&output,"InfosatEPG state:\n");
-        asprintf(&output,"%s Switched: %s",output,global->Switched() ? "yes" : "no");
+        cString head=cString::sprintf("InfosatEPG state:\n Switched: %s",global->Switched() ? "yes" : "no");
 
+        cString lcc;
         if (global->LastCurrentChannel!=-1)
         {
-            asprintf(&output,"%s Switchback to: %i\n", output, global->LastCurrentChannel);
+            lcc=cString::sprintf(" Switchback to: %i\n", global->LastCurrentChannel);
         }
         else
         {
-            asprintf(&output,"%s Switchback to: unset\n",output);
+            lcc=" Switchback to: unset\n";
         }
 
+        cString rall;
         if (global->ReceivedAll(&day,&month))
-            asprintf(&output,"%s Received all: yes (%02i.%02i.)",output,day,month);
+            rall=cString::sprintf(" Received all: yes (%02i.%02i.)",day,month);
         else
-            asprintf(&output,"%s Received all: no",output);
-        asprintf(&output,"%s Processed all: %s",output,global->ProcessedAll() ? "yes" : "no");
-        asprintf(&output,"%s\n",output);
+            rall=" Received all: no";
 
-        asprintf(&output,"%s Prevent shutdown until ready: %s",
-                 output,global->NoDeferredShutdown ? "no" : "yes");
-        asprintf(&output,"%s\n",output);
+        cString pall;
+        pall=cString::sprintf(" Processed all: %s\n Prevent shutdown until ready: %s\n",
+                              global->ProcessedAll() ? "yes" : "no",
+                              global->NoDeferredShutdown ? "no" : "yes");
 
+        cString wut;
         if (global->WakeupTime()!=-1)
         {
             time_t wakeup = global->WakeupTime();
-            asprintf(&output,"%s WakeupTime: %s ", output,ctime(&wakeup));
-            if (global->NoWakeup) asprintf(&output,"%s (blocked) ",output);
+            wut=cString::sprintf(" WakeupTime: %s %s",ctime(&wakeup),global->NoWakeup ? "(blocked)" : "");
         }
         else
         {
-            asprintf(&output,"%s WakeupTime: unset\n", output);
+            wut="%s WakeupTime: unset\n";
         }
 
-        asprintf(&output,"%s\n",output);
-        asprintf(&output,"%s      |        | missed  |            |            | unlocated\n",output);
-        asprintf(&output,"%s Day  | Date   | Packets | Received %% | Processed  | Events\n",output);
-        asprintf(&output,"%s------+--------+---------+------------+------------+----------\n",output);
+        cString head2;
+        head2="\n" \
+              "      |        | missed  |            |            | unlocated\n" \
+              " Day  | Date   | Packets | Received %% | Processed  | Events\n" \
+              "------+--------+---------+------------+------------+----------\n";
 
+        cString mstr;
+        char *fmstr=NULL;
         for (int mac=EPG_FIRST_DAY_MAC; mac<=EPG_LAST_DAY_MAC; mac++)
         {
-            if (global->ActualMac==mac)
-            {
-                asprintf(&output,"%s*",output);
-            }
-            else
-            {
-                asprintf(&output,"%s ",output);
-            }
-
-            asprintf(&output,"%s %i   | %02i.%02i. |   %3i   |    %3i     |    %s     |  %3i\n",
-                     output,mac,global->Infosatdata[mac].Day(),
-                     global->Infosatdata[mac].Month(),
-                     global->Infosatdata[mac].Missed(),
-                     global->Infosatdata[mac].ReceivedPercent(),
-                     global->Infosatdata[mac].Processed ? "yes" : " no",
-                     global->Infosatdata[mac].Unlocated);
+            mstr=cString::sprintf("%c %i   | %02i.%02i. |   %3i   |    %3i     |    %s     |  %3i\n",
+                                  (global->ActualMac==mac) ? '*' : ' ',
+                                  mac,global->Infosatdata[mac].Day(),
+                                  global->Infosatdata[mac].Month(),
+                                  global->Infosatdata[mac].Missed(),
+                                  global->Infosatdata[mac].ReceivedPercent(),
+                                  global->Infosatdata[mac].Processed ? "yes" : " no",
+                                  global->Infosatdata[mac].Unlocated);
+            fmstr=strcatrealloc(fmstr,mstr);
         }
+        output=cString::sprintf("%s%s%s%s%s%s%s",*head,*lcc,*rall,*pall,*wut,*head2,fmstr);
     }
+
     return output;
 }
 
