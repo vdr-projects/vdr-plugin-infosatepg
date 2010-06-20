@@ -1,4 +1,5 @@
 #include <vdr/channels.h>
+#include <ctype.h>
 #include "global.h"
 
 // --- cGlobalInfosatdata

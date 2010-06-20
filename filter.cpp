@@ -13,6 +13,8 @@
 
 #undef WRITE_RAW
 
+#define UNUSED(v) UNUSED_ ## v __attribute__((unused))
+
 cFilterInfosatepg::cFilterInfosatepg(cGlobalInfosatepg *Global)
 {
     global = Global;
@@ -69,7 +71,7 @@ u_short cFilterInfosatepg::UDPChecksum(iphdr *ipHeader, udphdr *udpHeader)
     return foldsum(sum);
 }
 
-void cFilterInfosatepg::Process(u_short Pid, u_char Tid, const u_char *Data, int Length)
+void cFilterInfosatepg::Process(u_short UNUSED(Pid), u_char UNUSED(Tid), const u_char *Data, int Length)
 {
 #define SECT_IP_HDR_START  12
 #define SECT_UDP_HDR_START 32
