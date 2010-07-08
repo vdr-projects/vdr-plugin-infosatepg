@@ -18,7 +18,11 @@
 #include "setup.h"
 #include "process.h"
 
+#if __GNUC__ > 3
 #define UNUSED(v) UNUSED_ ## v __attribute__((unused))
+#else
+#define UNUSED(x) x
+#endif
 
 extern char *strcatrealloc(char *dest, const char *src);
 
