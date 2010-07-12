@@ -195,17 +195,17 @@ bool cGlobalInfosatepg::SetDirectory(const char *Directory)
     return true;
 }
 
-bool cGlobalInfosatepg::CheckMAC(struct ethhdr *eth_hdr)
+bool cGlobalInfosatepg::CheckMAC(ether_header *eth_hdr)
 {
     if (!eth_hdr) return false;
-    if (eth_hdr->h_dest[0]!=MAC[0]) return false;
-    if (eth_hdr->h_dest[1]!=MAC[1]) return false;
-    if (eth_hdr->h_dest[2]!=MAC[2]) return false;
-    if (eth_hdr->h_dest[3]!=MAC[3]) return false;
-    if (eth_hdr->h_dest[4]!=MAC[4]) return false;
+    if (eth_hdr->ether_dhost[0]!=MAC[0]) return false;
+    if (eth_hdr->ether_dhost[1]!=MAC[1]) return false;
+    if (eth_hdr->ether_dhost[2]!=MAC[2]) return false;
+    if (eth_hdr->ether_dhost[3]!=MAC[3]) return false;
+    if (eth_hdr->ether_dhost[4]!=MAC[4]) return false;
 
-    if (eth_hdr->h_dest[5]<EPG_FIRST_DAY_MAC) return false;
-    if (eth_hdr->h_dest[5]>EPG_LAST_DAY_MAC) return false;
+    if (eth_hdr->ether_dhost[5]<EPG_FIRST_DAY_MAC) return false;
+    if (eth_hdr->ether_dhost[5]>EPG_LAST_DAY_MAC) return false;
 
     return true;
 }
