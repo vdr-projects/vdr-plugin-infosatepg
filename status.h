@@ -20,7 +20,11 @@ private:
   cDevice *myFilterDevice;
   cGlobalInfosatepg *global;
 protected:
+#if APIVERSNUM >= 10726
+  virtual void ChannelSwitch(const cDevice *Device, int ChannelNumber, bool LiveView);
+#else
   virtual void ChannelSwitch(const cDevice *Device, int ChannelNumber);
+#endif
 public:
   cStatusInfosatepg(cGlobalInfosatepg *Global);
   virtual ~cStatusInfosatepg(void); 

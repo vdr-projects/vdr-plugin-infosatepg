@@ -21,7 +21,11 @@ cStatusInfosatepg::~cStatusInfosatepg(void)
     if (myFilter) delete myFilter;
 }
 
+#if APIVERSNUM >= 10726
+void cStatusInfosatepg::ChannelSwitch(const cDevice *Device, int ChannelNumber, bool LiveView)
+#else
 void cStatusInfosatepg::ChannelSwitch(const cDevice *Device, int ChannelNumber)
+#endif
 {
     if (!ChannelNumber) return;
     if (!Device) return; // just to be safe

@@ -194,7 +194,7 @@ void cPluginInfosatepg::MainThreadHook(void)
         if (dev)
         {
             if (!dev->ProvidesTransponder(chan)) continue; // device cannot provide transponder -> skip
-            if (EITScanner.UsesDevice(dev)) continue; // EITScanner is updating EPG -> skip
+            if (EITScanner.Active()) continue; // EITScanner is updating EPG -> skip
             if (dev->Receiving()) continue; // device is recording -> skip
             if (dev->IsPrimaryDevice()) continue; // device is primary -> skip
             if (cDevice::ActualDevice()->CardIndex()==i) continue; // device is live viewing -> skip
