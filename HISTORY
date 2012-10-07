@@ -4,8 +4,11 @@ VDR Plugin 'infosatepg' Revision History
 2012-10-07: UNRELEASED
 
 - Added support for VDR >= 1.7.26
-  provided by debian patch, thx to
-  Tobias Grimm <etobi@debian.org>
+  provided by debian patch, thx to Tobias Grimm <etobi@debian.org>
+- Added patch for BSD from nox
+- Added compatibility for GCC3.x
+- Added missing ctype header
+- Added italian translation from Diego Pierotto
 
 2010-06-06: Version 0.0.11
 
