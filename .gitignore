@@ -1,0 +1,7 @@
+*.bak
+*.o
+*.so
+libvdr-infosatepg.so*
+*.tar.gz
+*.tgz
+*~
