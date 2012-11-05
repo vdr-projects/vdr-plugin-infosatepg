@@ -13,7 +13,7 @@
 #include "status.h"
 #include "process.h"
 
-static const char *VERSION        = "0.0.11";
+static const char *VERSION        = "0.0.12";
 static const char *DESCRIPTION    = trNOOP("Read EPG info from infosat");
 
 class cPluginInfosatepg : public cPlugin {

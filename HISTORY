@@ -1,7 +1,7 @@
 VDR Plugin 'infosatepg' Revision History
 ----------------------------------------
 
-2012-10-07: UNRELEASED
+2012-10-07: Version 0.0.12
 
 - Added support for VDR >= 1.7.26
   provided by debian patch, thx to Tobias Grimm <etobi@debian.org>
