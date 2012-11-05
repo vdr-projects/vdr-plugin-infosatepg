@@ -4,7 +4,7 @@ Written by:                  Jochen Dolze <vdr@dolze.de>
 
 Project's homepage:          http://projects.vdr-developer.org/projects/show/plg-infosatepg
 
-Latest version available at: http://projects.vdr-developer.org/projects/show/plg-infosatepg
+Latest version available at: http://projects.vdr-developer.org/projects/plg-infosatepg/files
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,5 +14,4 @@ See the file COPYING for more information.
 
 Description:
 
-Reads the contents of infosat and writes the data into the
-EPG.
+Reads the contents of infosat and writes the data into the EPG.
